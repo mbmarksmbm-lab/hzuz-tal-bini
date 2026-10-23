@@ -11,17 +11,19 @@ jobs:
     env:
       HAS_KEY: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
+
+      - uses: android-actions/setup-android@v3
 
       - name: Install
         run: npm ci
@@ -43,7 +45,11 @@ jobs:
           VERSION_NAME: 1.0.${{ github.run_number }}
         run: |
           chmod +x gradlew
-          ./gradlew bundleRelease assembleRelease --no-daemon
+          set -o pipefail
+          if ! ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace 2>&1 | tee "$RUNNER_TEMP/gradle.log"; then
+            grep -E "error:|Error|FAILURE|What went wrong|Could not|> " "$RUNNER_TEMP/gradle.log" | grep -v "^> Task" | head -40 | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
