@@ -1,0 +1,26 @@
+{
+  "name": "hzuz-tal-bini",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ħżuż tal-Bini – stone arch and stair setting-out calculator",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs",
+    "sync": "npm run build:web && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^8.2.1",
+    "@capacitor-community/privacy-screen": "^8.0.0",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/share": "^8.0.3",
+    "cordova-plugin-purchase": "^13.19.1",
+    "jspdf": "^2.5.1",
+    "jszip": "^3.10.1",
+    "polygon-clipping": "^0.15.7"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.3"
+  }
+}

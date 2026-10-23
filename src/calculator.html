@@ -1,0 +1,1342 @@
+<title>Ħnejjiet u Taraġ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one working column — arch type + inputs, elevation drawing, stone schedule, PDF */
+:root{
+  --bg:#eceee9; --panel:#f7f8f5; --ink:#1e2a2d; --muted:#5d6a6c; --line:#c7cec8;
+  --stone:#e2c88e; --stone-edge:#7d6128; --accent:#2c5a70; --guide:#8fa3ab;
+  --ok:#2f7344; --bad:#ad3b2a;
+  --f-ui:"IBM Plex Sans Condensed",system-ui,sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141a1c; --panel:#1c2427; --ink:#e3e8e3; --muted:#97a4a5; --line:#33403f;
+  --stone:#9c814a; --stone-edge:#d9bb7a; --accent:#7fb3cc; --guide:#55707a;
+  --ok:#6cc08a; --bad:#ec7d68; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141a1c; --panel:#1c2427; --ink:#e3e8e3; --muted:#97a4a5; --line:#33403f;
+  --stone:#9c814a; --stone-edge:#d9bb7a; --accent:#7fb3cc; --guide:#55707a;
+  --ok:#6cc08a; --bad:#ec7d68; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45}
+.wrap{max-width:980px;margin:0 auto;padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:18px}
+h1{font-size:1.7rem;font-weight:700;margin:0;letter-spacing:.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:2px 0 0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px 14px}
+label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;min-width:0}
+input,select{font:500 1rem var(--f-num);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px 9px;width:100%;box-sizing:border-box}
+#type{font:600 1.05rem var(--f-ui)}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.hint{font-size:.72rem;text-transform:none;letter-spacing:0;font-weight:400}
+.wide{grid-column:1/-1}
+.err{color:var(--bad);font-weight:600;margin:0}
+.info{margin:0;font-weight:600}
+.info span,.dims span{font-family:var(--f-num)}
+.dims{margin:0;color:var(--muted);font-size:.85rem;display:flex;flex-wrap:wrap;gap:2px 18px}
+.draw{overflow-x:auto}
+svg{display:block;width:100%;height:auto;max-height:70vh}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+.ok{color:var(--ok);font-weight:600}.no{color:var(--bad);font-weight:600}
+.note{color:var(--muted);font-size:.85rem;max-width:68ch}
+button{font:600 1rem var(--f-ui);background:var(--accent);color:var(--panel);border:0;border-radius:4px;padding:10px 16px;cursor:pointer}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.pdfrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+textarea{font:400 1rem var(--f-ui);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px 9px;width:100%;box-sizing:border-box;resize:vertical;text-transform:none;letter-spacing:0}
+textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+#bugOut{white-space:pre-wrap;font:400 .8rem var(--f-num);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:10px;margin:10px 0 0;user-select:all;overflow-x:auto}
+.btnlink{font:600 1rem var(--f-ui);background:var(--ok);color:var(--panel);border-radius:4px;padding:10px 16px;text-decoration:none;display:inline-block}
+.btnlink:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.sel{font-family:var(--f-num);user-select:all;color:var(--ink)}
+#gate{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;align-items:center;justify-content:center;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#gate[hidden]{display:none}
+.gbox{max-width:360px;width:100%;display:flex;flex-direction:column;gap:14px}
+#gateCode{font-size:1.3rem;letter-spacing:.12em;text-transform:uppercase}
+.mode{display:flex;flex-direction:column;gap:18px}
+.topbar{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;justify-content:space-between}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.segb{background:transparent;color:var(--ink);border-radius:0;padding:10px 20px;font:600 1.05rem var(--f-ui)}
+.segb[aria-pressed="true"]{background:var(--accent);color:var(--panel)}
+.unitl{flex-direction:row;align-items:center;gap:8px}
+.unitl select{width:auto}
+h2{font-size:1.05rem;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em}
+</style>
+
+<div id="gate" hidden>
+  <div class="gbox">
+    <h1>Ħnejjiet u Taraġ</h1>
+    <p class="sub" id="gateMsg">Daħħal il-kodiċi li ngħatajt biex tuża l-programm.</p>
+    <label for="gateCode">Kodiċi<input id="gateCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX"></label>
+    <button id="gateBtn" type="button">Idħol</button>
+    <p class="err" id="gateErr"></p>
+  </div>
+</div>
+<div class="wrap" id="app">
+  <p class="note" id="gateBadge" hidden style="margin:0"></p>
+  <header>
+    <h1>Ħnejjiet u Taraġ</h1>
+    <p class="sub" id="modeSub">Samrotti b'dwella ndaqs · numru fard · qisien netti bit-tajn imnaqqas</p>
+  </header>
+
+  <section class="panel topbar">
+    <div class="seg" role="group" aria-label="Programm">
+      <button type="button" id="mArch" class="segb" aria-pressed="true">Ħnejjiet</button>
+      <button type="button" id="mStair" class="segb" aria-pressed="false">Taraġ</button>
+    </div>
+    <label for="unit" class="unitl">Unità
+      <select id="unit"><option value="in">Pulzieri (")</option><option value="mm">Millimetri</option></select></label>
+  </section>
+
+  <div id="archMode" class="mode">
+  <section class="panel">
+    <div class="grid">
+      <label for="type" class="wide">Tip ta' ħnejja
+        <select id="type">
+          <option value="arkipjan">Arkipjan</option>
+          <option value="kumpass">Ħnejja kumpass</option>
+          <option value="vojt">Ħnejja tal-vojt</option>
+          <option value="kalament">Ħnejja tal-vojt tal-kalament</option>
+          <option value="tliet" selected>Ħnejja tal-għoli mogħti (3 ċentri)</option>
+          <option value="elissi">Ħnejja tal-għoli mogħti elissi</option>
+          <option value="erba">Ħnejja ta' erba' ċentri</option>
+          <option value="hames">Ħnejja tal-ħames ċentri</option>
+          <option value="kwart">Ħnejja tal-kwart</option>
+          <option value="terz">Ħnejja tat-terz</option>
+          <option value="rampanti">Ħnejja rampanti</option>
+        </select></label>
+      <label for="span">Dawl (A–B)<input id="span" type="text" autocomplete="off" value="3' 6&quot;"><span class="hint">eż. 3' 6 ½" jew 3' 6 1/2" jew 42.5</span></label>
+      <label for="rise" id="riseWrap">Għoli tal-ħnejja<input id="rise" type="text" autocomplete="off" value="1' 2&quot;"><span class="hint">mill-imposta sal-quċċata ta' ġewwa</span></label>
+      <label for="depth"><span id="depthLbl">Għoli tas-samrott</span><input id="depth" type="text" autocomplete="off" value="9&quot;"><span class="hint">minn ġewwa għal barra</span></label>
+      <label for="stepR" class="ramp">Għoli tat-tarġa<input id="stepR" type="text" autocomplete="off" value="6&quot;"></label>
+      <label for="stepG" class="ramp">Wisa' tat-tarġa<input id="stepG" type="text" autocomplete="off" value="11&quot;"><span class="hint">il-pass, biex jinħadem it-talut</span></label>
+      <label for="fpct" class="ramp">Post ta' F fuq it-talut (%)<input id="fpct" type="number" step="1" min="35" max="75" inputmode="numeric" value="55"><span class="hint">mill-A; il-ktieb: ftit aktar min-nofs</span></label>
+      <label for="joint">Ħxuna tat-tajn tal-fil<select id="joint"><option value="0.5">½"</option><option value="0.333333">⅓"</option><option value="0.25" selected>¼"</option><option value="0.1875">³⁄₁₆"</option><option value="0.125">⅛"</option></select><span class="hint">il-fil kollu; nofsu jitnaqqas minn kull vaża</span></label>
+      <label for="blockL">Vaża – tul<input id="blockL" type="text" autocomplete="off" value="1' 10&quot;"></label>
+      <label for="blockH">Vaża – wisgħa<input id="blockH" type="text" autocomplete="off" value="11&quot;"></label>
+      <label for="nmode">Numru ta' samrotti
+        <select id="nmode"><option value="auto">Awtomatiku</option><option value="man">Manwali</option></select></label>
+      <label for="nman" id="nmanWrap">Numru manwali<input id="nman" type="number" step="2" min="3" inputmode="numeric" value="7"></label>
+    </div>
+  </section>
+
+  <section id="out" class="panel" style="display:flex;flex-direction:column;gap:12px"></section>
+
+  <section class="panel" id="pdfPanel" hidden>
+    <h2>PDF u DXF</h2>
+    <p class="note" style="margin:0 0 10px">Moll wieħed għal kull par ta' samrotti (1 u l-aħħar, 2 u ta' qablu, u hekk) u wieħed għall-ġonta, 1:1. Fir-rampanti kull samrott għandu l-moll tiegħu. Il-karta (A4, A3 jew A2) tintgħażel skont id-daqs. Fil-printer agħżel "Actual size" jew 100%, mhux "Fit to page". Kull paġna għandha linja ta' 100 mm biex tiċċekkja l-iskala. Id-DXF jinżel f'file .zip: fih il-ħnejja kollha u moll f'kull file, 1:1 fl-unità magħżula, għall-AutoCAD jew is-CNC.</p>
+    <div class="pdfrow"><button id="pdfBtn" type="button">Niżżel il-PDF</button><button id="dxfBtn" type="button">Niżżel id-DXF</button><span id="pdfMsg" class="note"></span></div>
+  </section>
+
+  <section class="panel">
+    <h2>Skeda tas-samrotti</h2>
+    <div class="tbl" id="tbl"></div>
+    <p class="note" id="tblNote"></p>
+  </section>
+  </div>
+
+  <div id="stairMode" class="mode" hidden>
+  <section class="panel">
+    <div class="grid">
+      <label for="stype" class="wide">Tip ta' taraġ
+        <select id="stype">
+          <option value="dritt">Taraġ dritt</option>
+          <option value="pjanijiet">Taraġ bil-pjanijiet</option>
+          <option value="raggj">Taraġ tar-raġġ</option>
+          <option value="elissi">Taraġ elissi</option>
+          <option value="garigor">Taraġ garigor</option>
+        </select></label>
+      <label for="sH">Għoli mill-madum sal-madum<input id="sH" type="text" autocomplete="off" value="10' 0&quot;"><span class="hint">bil-lest, minn sular għal sular</span></label>
+      <label for="sNmode">Numru ta' skaluni
+        <select id="sNmode"><option value="auto">Awtomatiku</option><option value="man">Manwali</option></select></label>
+      <label for="sR" id="sRwrap">Alzatura mixtieqa<input id="sR" type="text" autocomplete="off" value="6&quot;"><span class="hint">qatt aktar minn 6½"</span></label>
+      <label for="sN" id="sNwrap">Numru manwali<input id="sN" type="number" min="2" step="1" inputmode="numeric" value="20"></label>
+      <label for="sRule" data-t="dritt pjanijiet raggj elissi">2 alzaturi + pedata<input id="sRule" type="text" autocomplete="off" value="23&quot;"><span class="hint">bejn 23" u 25"</span></label>
+      <label for="sW" data-t="dritt pjanijiet raggj elissi">Wisa' tat-taraġ<input id="sW" type="text" autocomplete="off" value="3' 0&quot;"></label>
+      <label for="sTL" data-t="pjanijiet">Tromba – tul<input id="sTL" type="text" autocomplete="off" value="10' 0&quot;"></label>
+      <label for="sTW" data-t="pjanijiet">Tromba – wisa'<input id="sTW" type="text" autocomplete="off" value="9' 0&quot;"></label>
+      <label for="rTW" data-t="raggj">Tromba – wisa' (A–B)<input id="rTW" type="text" autocomplete="off" value="7' 0&quot;"></label>
+      <label for="rTL" data-t="raggj">Tromba – tul (A–C)<input id="rTL" type="text" autocomplete="off" value="10' 0&quot;"></label>
+      <label for="rCorr" data-t="raggj">Korrezzjoni tat-taraġ<select id="rCorr"><option value="iva">Iva</option><option value="le">Le</option></select><span class="hint">skaluni bilanċjati madwar ir-raġġ</span></label>
+      <label for="eL" data-t="elissi">Tromba – dawl (B–C)<input id="eL" type="text" autocomplete="off" value="18' 0&quot;"><span class="hint">mhux anqas minn 18'</span></label>
+      <label for="eW" data-t="elissi">Tromba – wisa' (A–B)<input id="eW" type="text" autocomplete="off" value="7' 0&quot;"><span class="hint">mhux anqas minn 7'</span></label>
+      <label for="gTL" data-t="garigor">Tromba – tul<input id="gTL" type="text" autocomplete="off" value="5' 0&quot;"><span class="hint">mhux anqas minn 4'</span></label>
+      <label for="gTW" data-t="garigor">Tromba – wisa'<input id="gTW" type="text" autocomplete="off" value="5' 0&quot;"></label>
+      <label for="gBok" data-t="garigor">Bokka<input id="gBok" type="text" autocomplete="off" value="8&quot;"></label>
+      <label for="gBeb" data-t="garigor">Bebbuxa<input id="gBeb" type="text" autocomplete="off" value="5&quot;"><span class="hint">bastun 3" + dent 1" + żgoxx 1"</span></label>
+      <label for="gLap" data-t="garigor">M'usa' skwerra<input id="gLap" type="text" autocomplete="off" value="1 ¼&quot;"><span class="hint">il-qabda fuq l-iskaluna ta' taħt</span></label>
+      <label for="gStart" data-t="garigor">Angolu tal-ewwel fil (°)<input id="gStart" type="number" step="1" inputmode="numeric" value="0"><span class="hint">0° = mal-lemin, idur kontra l-arloġġ</span></label>
+      <label for="sIng">Ingall ġol-ħajt<input id="sIng" type="text" autocomplete="off" value="3&quot;"></label>
+      <label for="sBack" data-t="dritt pjanijiet raggj elissi">Ħarġa wara<input id="sBack" type="text" autocomplete="off" value="2 ½&quot;"><span class="hint">fejn toqgħod l-iskaluna ta' fuq</span></label>
+      <label for="sGal" data-t="dritt pjanijiet">Galgnu (ħxuna taħt)<input id="sGal" type="text" autocomplete="off" value="2 ½&quot;"></label>
+      <label for="sIrh" data-t="dritt pjanijiet">Ħxuna tal-irħam<input id="sIrh" type="text" autocomplete="off" value="1 ½&quot;"><span class="hint">għat-taraġ tal-konkos; 0 jekk tal-ġebel</span></label>
+    </div>
+  </section>
+
+  <section id="sOut" class="panel" style="display:flex;flex-direction:column;gap:12px"></section>
+
+  <section class="panel" id="sPdfPanel" hidden>
+    <h2>PDF u DXF</h2>
+    <p class="note" style="margin:0 0 10px">Il-PDF fih il-moll tal-iskaluna 1:1 (fit-tar-raġġ, fl-elissi u fil-garigor, moll għal kull forma differenti). Moll akbar minn A2 jinqasam fuq diversi folji A2 li jirkbu fuq xulxin. Stampa "Actual size" jew 100%, mhux "Fit to page". Id-DXF jinżel f'.zip: it-taraġ kollu (ġenb jew pjanta) u l-moll(ijiet), 1:1 fl-unità magħżula.</p>
+    <label for="sPaper" style="max-width:340px;margin:0 0 10px">Karta għall-mollijiet kbar
+      <select id="sPaper"><option value="a2">Folji A2 (moll kbir jinqasam fuq kemm-il folja)</option><option value="roll">Plotter (roll 914 mm, moll f'paġna waħda)</option></select></label>
+    <div class="pdfrow"><button id="sPdfBtn" type="button">Niżżel il-PDF</button><button id="sDxfBtn" type="button">Niżżel id-DXF</button><span id="sPdfMsg" class="note"></span></div>
+  </section>
+
+  <section class="panel">
+    <h2>Riżultati</h2>
+    <div class="tbl" id="sTbl"></div>
+    <p class="note" id="sNote"></p>
+  </section>
+  </div>
+
+  <section class="panel">
+    <h2>Irraporta problema</h2>
+    <p class="note" style="margin:0 0 10px">Ikteb x'mar ħażin. Ir-rapport jinkludi waħdu t-tip ta' ħnejja u l-qisien li daħħalt, biex il-problema tkun tista' terġa' tinħadem.</p>
+    <label for="bugTxt">X'ġara?<textarea id="bugTxt" rows="4" placeholder="eż. Is-samrott 2 joħroġ ikbar milli suppost meta…"></textarea></label>
+    <div class="pdfrow" style="margin-top:10px"><button id="bugBtn" type="button">Ikkopja r-rapport</button><span id="bugMsg" class="note"></span></div>
+    <pre id="bugOut" hidden></pre>
+    <div id="bugSend" class="pdfrow" style="margin-top:10px" hidden>
+      <a id="bugWa" class="btnlink" href="https://wa.me/35679210844" target="_blank" rel="noopener">Ibgħat fuq WhatsApp</a>
+      <span class="note">jew email lil <span class="sel">mbmarks.mbm@gmail.com</span> · WhatsApp <span class="sel">+356 7921 0844</span></span>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/polygon-clipping@0.15.7/dist/polygon-clipping.umd.min.js"></script>
+<script>
+window.LAST=null;
+const $=id=>document.getElementById(id);
+const allow=f=>window.HZ_ALLOW?window.HZ_ALLOW(f):true;
+const paywall=t=>{if(window.HZ_PAYWALL)window.HZ_PAYWALL(t);};
+let lastType=null;
+const PI=Math.PI, SQ3=Math.sqrt(3);
+const IDS=["type","unit","span","rise","depth","stepR","stepG","fpct","joint","blockL","blockH","nmode","nman"];
+let MODE="arch",STAIRS_SAVED=false;
+try{const s=JSON.parse(localStorage.getItem("hnejja3c")||"null");if(s){IDS.forEach(k=>{if(s[k]!=null&&$(k))$(k).value=s[k]});
+  ["stype","sH","sNmode","sR","sN","sRule","sW","sTL","sTW","rTW","rTL","rCorr","eL","eW","gTL","gTW","gBok","gBeb","gLap","gStart","sIng","sBack","sGal","sIrh"].forEach(k=>{if(s[k]!=null&&$(k)){$(k).value=s[k];STAIRS_SAVED=true;}});
+  if(s.mode==="stairs")MODE="stairs";}}catch(e){}
+function saveAll(){try{const s={mode:MODE};IDS.forEach(k=>s[k]=$(k).value);if(typeof SIDS!=="undefined")SIDS.forEach(k=>s[k]=$(k).value);localStorage.setItem("hnejja3c",JSON.stringify(s));}catch(e){}}
+if(!$("joint").value)$("joint").value="0.25";
+if(!$("type").value)$("type").value="tliet";
+
+const NAMES={arkipjan:"Arkipjan",kumpass:"Ħnejja kumpass",vojt:"Ħnejja tal-vojt",kalament:"Ħnejja tal-vojt tal-kalament",tliet:"Ħnejja tal-għoli mogħti (3 ċentri)",elissi:"Ħnejja tal-għoli mogħti elissi",erba:"Ħnejja ta' erba' ċentri",hames:"Ħnejja tal-ħames ċentri",kwart:"Ħnejja tal-kwart",terz:"Ħnejja tat-terz",rampanti:"Ħnejja rampanti"};
+const NEEDS_RISE={kalament:1,tliet:1,elissi:1};
+
+// ---------- units ----------
+function parseLen(str,u){
+  u=u||$("unit").value;
+  let s=String(str==null?"":str).trim().replace(/,/g,".");
+  if(!s) return NaN;
+  if(u==="mm") return parseFloat(s);
+  s=s.replace(/[″”“]/g,'"').replace(/[′’‘`]/g,"'").replace(/''/g,'"');
+  const UF={"½":"1/2","¼":"1/4","¾":"3/4","⅛":"1/8","⅜":"3/8","⅝":"5/8","⅞":"7/8","⅓":"1/3"};
+  s=s.replace(/[½¼¾⅛⅜⅝⅞⅓]/g,c=>" "+UF[c]+" ").replace(/(\d)-(\d)/g,"$1 $2");
+  let ft=0;
+  const m=s.match(/^\s*([\d.]+)\s*'(.*)$/);
+  if(m){ft=parseFloat(m[1]);s=m[2];}
+  s=s.replace(/"|in\b/g," ").trim();
+  let tot=0;
+  if(s){for(const tk of s.split(/\s+/)){
+    if(/^\d+\/\d+$/.test(tk)){const [a,b]=tk.split("/").map(Number);if(!b)return NaN;tot+=a/b;}
+    else if(/^\d*\.?\d+$/.test(tk)) tot+=parseFloat(tk);
+    else return NaN;
+  }}
+  return ft*12+tot;
+}
+function fmt(v,u){
+  u=u||$("unit").value;
+  if(u==="mm") return Math.round(v)+" mm";
+  const neg=v<0; v=Math.abs(v);
+  const s=Math.round(v*16), ft=Math.floor(s/192), inch=Math.floor((s%192)/16); let f=s%16, d=16;
+  const U={"1/2":"½","1/4":"¼","3/4":"¾","1/8":"⅛","3/8":"⅜","5/8":"⅝","7/8":"⅞"};
+  let fr="";
+  if(f){while(f%2===0){f/=2;d/=2} const SUP="⁰¹²³⁴⁵⁶⁷⁸⁹",SUB="₀₁₂₃₄₅₆₇₈₉";fr=U[f+"/"+d]||(String(f).replace(/\d/g,c=>SUP[c])+"⁄"+String(d).replace(/\d/g,c=>SUB[c]));}
+  let inPart;
+  if(ft&&!inch&&!fr) inPart='0"';
+  else if(!inch&&fr) inPart=fr+'"';
+  else inPart=inch+(fr?" "+fr:"")+'"';
+  return (neg?"-":"")+(ft?ft+"' ":"")+inPart;
+}
+const deg=r=>r*180/Math.PI;
+const TOL=()=>$("unit").value==="mm"?0.5:1/64;
+function fmtUp(v,u){u=u||$("unit").value;return u==="mm"?Math.ceil(v-0.05)+" mm":fmt(Math.ceil(v*16-0.02)/16,"in");}
+const hyp=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1]);
+function lineX(p1,p2,p3,p4){ // intersection of line p1p2 with line p3p4
+  const d=(p1[0]-p2[0])*(p3[1]-p4[1])-(p1[1]-p2[1])*(p3[0]-p4[0]);
+  const a=p1[0]*p2[1]-p1[1]*p2[0], b=p3[0]*p4[1]-p3[1]*p4[0];
+  return [(a*(p3[0]-p4[0])-(p1[0]-p2[0])*b)/d,(a*(p3[1]-p4[1])-(p1[1]-p2[1])*b)/d];
+}
+
+// ---------- curve builders ----------
+// sample an arc chain: arcs [{cx,cy,r,a0,a1,c}] (angles decreasing), offset d added to radius
+function chainPts(arcs,d,res){
+  const pts=[];
+  arcs.forEach((A,ai)=>{
+    const r=A.r+d; let a1=A.a1;
+    if(A.toAxis) a1=Math.acos(Math.max(-1,Math.min(1,-A.cx/r)));
+    const N=Math.max(6,Math.ceil(Math.abs(A.a0-a1)*r/res));
+    for(let j=(ai?1:0);j<=N;j++){
+      const th=A.a0+(a1-A.a0)*j/N;
+      pts.push({x:A.cx+r*Math.cos(th),y:A.cy+r*Math.sin(th),ux:Math.cos(th),uy:Math.sin(th),c:A.c,cr:A.cr||A.c});
+    }
+  });
+  return pts;
+}
+function mirror(left){
+  const r=left.slice(0,-1).reverse().map(p=>({x:-p.x,y:p.y,ux:-p.ux,uy:p.uy,c:p.cr,cr:p.c}));
+  return left.concat(r);
+}
+
+// ---------- arch geometry per type ----------
+function geom(type,P){
+  const s=P.span,a=s/2,t=P.t,res=s/900;
+  const g={sym:true,points:[],cons:[],dims:[],jambs:[],extra:[]};
+  const pt=(n,x,y)=>g.points.push({n,x,y});
+  const ln=(p,q)=>g.cons.push({l:[p,q]});
+  const arc=(cx,cy,r,a0,a1)=>g.cons.push({a:[cx,cy,r,a0,a1]});
+  const vd=(x,y1,y2,tx)=>g.dims.push({k:"v",x,y1,y2,t:tx});
+  const hd=(x1,x2,row,tx)=>g.dims.push({k:"h",x1,x2,row,t:tx});
+  let left,leftOut;
+  const fromChain=(arcs)=>{left=chainPts(arcs,0,res);leftOut=chainPts(arcs,t,res);};
+  if(type==="arkipjan"){
+    const oy=-s*SQ3/2;
+    const inner=[],N=600;
+    for(let j=0;j<=N;j++){const x=-a+s*j/N,ux=x,uy=-oy,L=Math.hypot(ux,uy);inner.push({x,y:0,ux:ux/L,uy:uy/L,c:"O",cr:"O"});}
+    const W=a+t*s/(s*SQ3/2)+t*2,outer=[];
+    for(let j=0;j<=N;j++){const x=-W+2*W*j/N;outer.push({x,y:t});}
+    g.inner=inner;g.outer=outer;
+    pt("A",-a,0);pt("B",a,0);pt("O",0,oy);
+    arc(-a,0,s,-PI/2.4,-PI/6);arc(a,0,s,-PI+PI/6,-PI+PI/2.4);
+    ln([-a,0],[0,oy]);ln([a,0],[0,oy]);
+    vd(0,0,oy,"SO = "+fmt(-oy));
+    g.jambs=[[-a,0],[a,0]];
+    g.note="Nota: l-arkipjan huwa dritt – mhux inkluż camber.";
+    g.extra.push("H (għoli) = "+fmt(t));
+    return g;
+  }
+  if(type==="elissi"){
+    const h=P.rise; if(!(h>0&&h<a)) return {err:"L-għoli tal-elissi jrid ikun inqas min-nofs id-dawl ("+fmt(a)+")."};
+    const N=900,inner=[],outer=[];
+    const A2=a+t,B2=h+t;
+    for(let j=0;j<=N;j++){const ph=PI-PI/2*j/N;const x=a*Math.cos(ph),y=h*Math.sin(ph);let ux=x/(a*a),uy=y/(h*h);const L=Math.hypot(ux,uy);inner.push({x,y,ux:ux/L,uy:uy/L,c:"—",cr:"—"});
+      outer.push({x:A2*Math.cos(ph),y:B2*Math.sin(ph)});}
+    g.inner=mirror(inner);g.outer=mirror(outer.map(p=>({...p,ux:0,uy:1,c:"",cr:""})));
+    const c=Math.sqrt(a*a-h*h),c2=Math.sqrt(Math.max(0,A2*A2-B2*B2));
+    pt("A",-a,0);pt("B",a,0);pt("C",0,0);pt("H",0,h);pt("F1",-c,0);pt("F2",c,0);
+    ln([-c,0],[0,h]);ln([c,0],[0,h]);
+    vd(0,0,h,"CH = "+fmt(h));
+    hd(-c,0,0,"C–Foċi = "+fmt(c));
+    g.extra.push("Foċi tad-dwella mis-C = "+fmt(c),"Foċi tal-ingroppa (3, 4) mis-C = "+fmt(c2),"Ingroppa: "+fmt(2*A2)+" × "+fmt(B2));
+    g.jambs=[[-a,0],[a,0]];
+    return g;
+  }
+  if(type==="rampanti"){
+    const m=P.stepR/P.stepG, f=P.fpct/100;
+    if(!(m>=0)||!(f>0.2&&f<0.9)) return {err:"Daħħal l-għoli u l-wisa' tat-tarġa."};
+    const k=Math.sqrt(1+m*m), AB=(s+2*t)*k, AF=f*AB, FB=AB-AF;
+    const yA=AF, A=[-t,yA], B=[s+t,yA+m*(s+2*t)];
+    const F=[A[0]+AF/k,A[1]+AF*m/k];
+    const D=[-t,0], O=[F[0]+F[1]*m,0], RO=O[0]+t;
+    const E=[s+t,B[1]-FB];
+    const mu=(F[1]-E[1])/(F[1]-O[1]);
+    const C=[F[0]+mu*(O[0]-F[0]),F[1]+mu*(O[1]-F[1])], RC=(s+t)-C[0];
+    if(!(RO>t&&RC>t&&mu>0&&mu<1)) return {err:"B'dan it-talut u din il-ħxuna ma toħroġx ħnejja rampanti. Ibdel il-post ta' F jew it-tarġa."};
+    const thF=Math.atan2(F[1]-O[1],F[0]-O[0]);
+    const arcs=[{cx:O[0],cy:O[1],r:RO-t,a0:PI,a1:thF,c:"O"},{cx:C[0],cy:C[1],r:RC-t,a0:thF,a1:0,c:"C"}];
+    g.inner=chainPts(arcs,0,res);g.outer=chainPts(arcs,t,res);g.sym=false;
+    pt("A",...A);pt("B",...B);pt("F",...F);pt("D",...D);pt("E",...E);pt("O",...O);pt("C",...C);
+    ln(A,B);ln(F,O);ln(D,O);ln(E,C);
+    g.jambs=[[0,0],[s,E[1]]];
+    g.extra.push("Imposta tal-lemin ogħla mix-xellug b'"+fmt(E[1]),"AD = AF = "+fmt(AF),"BE = BF = "+fmt(FB),"Raġġ O (ingroppa) = "+fmt(RO),"Raġġ C (ingroppa) = "+fmt(RC),"Talut: "+(Math.atan(m)*180/PI).toFixed(1)+"°");
+    return g;
+  }
+  // symmetric arc chains (left half to the crown)
+  let arcs;
+  if(type==="kumpass"){
+    arcs=[{cx:0,cy:0,r:a,a0:PI,toAxis:1,c:"O"}];
+    pt("A",-a,0);pt("B",a,0);pt("O",0,0);
+    g.extra.push("Raġġ = "+fmt(a));
+  }else if(type==="vojt"||type==="kalament"){
+    let r,oy,h;
+    if(type==="vojt"){r=s;oy=-s*SQ3/2;h=r+oy;}
+    else{h=P.rise;if(!(h>0&&h<=a))return {err:"L-għoli jrid ikun bejn 0 u nofs id-dawl ("+fmt(a)+")."};r=(a*a+h*h)/(2*h);oy=h-r;}
+    arcs=[{cx:0,cy:oy,r,a0:Math.atan2(-oy,-a),toAxis:1,c:"O"}];
+    pt("A",-a,0);pt("B",a,0);pt("C",0,0);pt("H",0,h);pt("O",0,oy);
+    ln([-a,0],[0,oy]);ln([a,0],[0,oy]);
+    if(type==="kalament"){ln([-a,0],[0,h]);ln([a,0],[0,h]);}
+    else{arc(-a,0,s,-PI/2.6,-PI/4.5);arc(a,0,s,-PI+PI/4.5,-PI+PI/2.6);}
+    vd(0,0,h,"CH = "+fmt(h));vd(0,0,oy,"CO = "+fmt(-oy));
+    g.extra.push("Raġġ (OA) = "+fmt(r));
+  }else if(type==="tliet"){
+    const h=P.rise;if(!(h>0&&h<=a))return {err:"L-għoli jrid ikun bejn 0 u nofs id-dawl ("+fmt(a)+")."};
+    let r1,R2,k,th;
+    if(Math.abs(h-a)<1e-9){r1=a;R2=a;k=0;th=PI/2;}
+    else{const c=Math.hypot(a,h);r1=c*(c-a+h)/(2*a);k=((a-r1)**2-(h-r1)**2)/(2*(h-r1));R2=h+k;th=Math.atan2(k,-(a-r1));}
+    if(!(r1>0)||(r1>=h-1e-9&&Math.abs(h-a)>1e-9))return {err:"Dan l-għoli ma jagħtix ħnejja ta' tliet ċentri valida."};
+    const Dx=-(a-r1);
+    arcs=[{cx:Dx,cy:0,r:r1,a0:PI,a1:th,c:"D",cr:"E"},{cx:0,cy:-k,r:R2,a0:th,toAxis:1,c:"O"}];
+    pt("A",-a,0);pt("B",a,0);pt("S",0,0);pt("H",0,h);pt("O",0,-k);
+    if(Math.abs(Dx)>1e-6){pt("D",Dx,0);pt("E",-Dx,0);}
+    arc(0,0,a,0,PI);ln([-a,0],[0,h]);ln([a,0],[0,h]);
+    const Q=[Dx+r1*Math.cos(th),r1*Math.sin(th)];ln([0,-k],Q);ln([0,-k],[-Q[0],Q[1]]);
+    vd(0,0,h,"SH = "+fmt(h));vd(0,0,-k,"SO = "+fmt(k));
+    if(Math.abs(Dx)>1e-6){hd(-a,Dx,0,"AD = "+fmt(r1));hd(Dx,0,1,"DS = "+fmt(-Dx));}
+    g.extra.push("Raġġ D, E = "+fmt(r1),"Raġġ O = "+fmt(R2));
+  }else if(type==="kwart"||type==="terz"){
+    const d=type==="kwart"?a/2:a/3; // half distance between D and E
+    const oy=-d*SQ3, rs=a-d, rt=2*d+rs;
+    arcs=[{cx:-d,cy:0,r:rs,a0:PI,a1:2*PI/3,c:"D",cr:"E"},{cx:0,cy:oy,r:rt,a0:2*PI/3,toAxis:1,c:"O"}];
+    const h=oy+rt;
+    pt("A",-a,0);pt("B",a,0);pt("C",0,0);pt("D",-d,0);pt("E",d,0);pt("O",0,oy);pt("H",0,h);
+    ln([-d,0],[0,oy]);ln([d,0],[0,oy]);
+    const Q=[-d+rs*Math.cos(2*PI/3),rs*Math.sin(2*PI/3)];ln([0,oy],Q);ln([0,oy],[-Q[0],Q[1]]);
+    vd(0,0,h,"CH = "+fmt(h));vd(0,0,oy,"CO = "+fmt(-oy));
+    hd(-a,-d,0,"AD = "+fmt(rs));hd(-d,0,1,"DC = "+fmt(d));
+    g.extra.push("Raġġ D, E = "+fmt(rs),"Raġġ O = "+fmt(rt));
+  }else if(type==="erba"){
+    const R=[-a/2,0],S=[a/2,0],O=[0,-a*SQ3/2],E=[-a/2,-a*SQ3],D=[a/2,-a*SQ3];
+    const rs=a/2, rD=hyp(D,R)+rs;
+    arcs=[{cx:R[0],cy:0,r:rs,a0:PI,a1:2*PI/3,c:"R",cr:"S"},{cx:D[0],cy:D[1],r:rD,a0:2*PI/3,toAxis:1,c:"D",cr:"E"}];
+    const h=D[1]+Math.sqrt(rD*rD-D[0]*D[0]);
+    pt("A",-a,0);pt("B",a,0);pt("C",0,0);pt("R",...R);pt("S",...S);pt("O",...O);pt("E",...E);pt("D",...D);pt("H",0,h);
+    ln(R,D);ln(S,E);ln(R,E);ln(S,D);
+    vd(0,0,h,"CH = "+fmt(h));
+    hd(-a,R[0],0,"AR = "+fmt(rs));
+    g.extra.push("Raġġ R, S = "+fmt(rs),"Raġġ D, E = "+fmt(rD),"RE = SD = "+fmt(a*SQ3));
+  }else if(type==="hames"){
+    const R=[-0.3*s,0],K=[-0.1*s,0],L=[0.1*s,0],S=[0.3*s,0],O=[0,-s*SQ3/2],Q=[0,-0.3*SQ3*s];
+    const F=lineX(Q,R,O,K);
+    const r1=0.2*s, aR=Math.atan2(R[1]-F[1],R[0]-F[0]), rF=hyp(F,R)+r1, aO=Math.atan2(F[1]-O[1],F[0]-O[0]), rO=hyp(O,F)+rF;
+    arcs=[{cx:R[0],cy:0,r:r1,a0:PI,a1:aR,c:"R",cr:"S"},{cx:F[0],cy:F[1],r:rF,a0:aR,a1:aO,c:"F",cr:"D"},{cx:0,cy:O[1],r:rO,a0:aO,toAxis:1,c:"O"}];
+    const h=O[1]+rO;
+    pt("A",-a,0);pt("B",a,0);pt("R",...R);pt("K",...K);pt("L",...L);pt("S",...S);pt("O",...O);pt("Q",...Q);pt("F",...F);pt("D",-F[0],F[1]);pt("H",0,h);
+    ln(Q,R);ln(Q,S);ln(O,K);ln(O,L);
+    vd(0,0,h,"CH = "+fmt(h));
+    hd(-a,R[0],0,"AR = "+fmt(r1));
+    g.extra.push("Raġġ R, S = "+fmt(r1),"Raġġ F, D = "+fmt(rF),"Raġġ O = "+fmt(rO),"CO = "+fmt(-O[1]),"CQ = "+fmt(-Q[1]));
+  }
+  fromChain(arcs);
+  g.inner=mirror(left);g.outer=mirror(leftOut);
+  g.jambs=[[-a,0],[a,0]];
+  return g;
+}
+
+// ---------- stones ----------
+function prep(g){
+  const pts=g.inner,cum=[0];
+  for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y));
+  g.L=cum[cum.length-1];g.cum=cum;
+  const ext=(arr,e)=>{const n=arr.length,a0=arr[0],a1=arr[1],z0=arr[n-1],z1=arr[n-2];
+    const d0=Math.hypot(a0.x-a1.x,a0.y-a1.y)||1,d1=Math.hypot(z0.x-z1.x,z0.y-z1.y)||1;
+    return [[a0.x+(a0.x-a1.x)/d0*e,a0.y+(a0.y-a1.y)/d0*e]].concat(arr.map(p=>[p.x,p.y]),[[z0.x+(z0.x-z1.x)/d1*e,z0.y+(z0.y-z1.y)/d1*e]]);};
+  g.inP=ext(g.inner,g.t*0.6);g.outP=ext(g.outer,g.t*0.6);
+}
+function at(g,s){
+  const c=g.cum,p=g.inner;let lo=0,hi=c.length-1;
+  s=Math.max(0,Math.min(g.L,s));
+  while(hi-lo>1){const m=(lo+hi)>>1;if(c[m]<=s)lo=m;else hi=m;}
+  const f=c[hi]>c[lo]?(s-c[lo])/(c[hi]-c[lo]):0,A=p[lo],B=p[hi];
+  let ux=A.ux+(B.ux-A.ux)*f,uy=A.uy+(B.uy-A.uy)*f;const L=Math.hypot(ux,uy)||1;
+  return {x:A.x+(B.x-A.x)*f,y:A.y+(B.y-A.y)*f,ux:ux/L,uy:uy/L,c:(f<0.5?A:B).c};
+}
+function hit(poly,P,u,mode){
+  let best=null;
+  for(let k=0;k<poly.length-1;k++){
+    const q=poly[k],r=poly[k+1],ex=r[0]-q[0],ey=r[1]-q[1];
+    const den=u[0]*ey-u[1]*ex; if(Math.abs(den)<1e-12)continue;
+    const wx=q[0]-P[0],wy=q[1]-P[1];
+    const lam=(wx*ey-wy*ex)/den, mu=(wx*u[1]-wy*u[0])/den;
+    if(mu<-1e-9||mu>1+1e-9)continue;
+    const score=mode==="in"?Math.abs(lam):(lam>1e-9?lam:Infinity);
+    if(!best||score<best.score)best={score,k,mu,p:[q[0]+mu*ex,q[1]+mu*ey]};
+  }
+  return best;
+}
+function between(poly,h0,h1){
+  const out=[h0.p];
+  for(let k=h0.k+1;k<=h1.k;k++)out.push(poly[k]);
+  out.push(h1.p);return out;
+}
+const plen=a=>{let L=0;for(let i=1;i<a.length;i++)L+=hyp(a[i],a[i-1]);return L;};
+function minRect(P){
+  let best=null;
+  for(let q=0;q<90;q+=0.25){
+    const t=q*Math.PI/180,c=Math.cos(t),s=Math.sin(t);
+    let x0=1e18,x1=-1e18,y0=1e18,y1=-1e18;
+    for(const [x,y] of P){const u=x*c+y*s,v=-x*s+y*c;x0=Math.min(x0,u);x1=Math.max(x1,u);y0=Math.min(y0,v);y1=Math.max(y1,v)}
+    const A=(x1-x0)*(y1-y0);
+    if(!best||A<best.A)best={A,w:Math.max(x1-x0,y1-y0),h:Math.min(x1-x0,y1-y0),q:t};
+  }
+  return best;
+}
+function stones(g,n,gr,bl,bh){
+  const out=[],seg=g.L/n;
+  const J=[];for(let i=0;i<=n;i++)J.push(at(g,i*seg));
+  const side=(j,sg)=>{const P=J[j],T=[P.uy,-P.ux];return {P:[P.x+sg*gr*T[0],P.y+sg*gr*T[1]],u:[P.ux,P.uy]};};
+  for(let i=0;i<n;i++){
+    const L0=side(i,1),L1=side(i+1,-1);
+    const i0=hit(g.inP,L0.P,L0.u,"in"),i1=hit(g.inP,L1.P,L1.u,"in");
+    const o0=hit(g.outP,L0.P,L0.u,"out"),o1=hit(g.outP,L1.P,L1.u,"out");
+    if(!i0||!i1||!o0||!o1) return null;
+    const inn=between(g.inP,i0,i1),ext=between(g.outP,o0,o1);
+    const poly=inn.concat(ext.slice().reverse());
+    const R=minRect(poly);
+    const ang=j=>deg(Math.atan2(Math.abs(J[j].uy),Math.abs(J[j].ux)));
+    const c0=at(g,i*seg+seg*0.02).c,c1=at(g,(i+1)*seg-seg*0.02).c;
+    const mi=Math.floor(inn.length/2),mo=Math.floor(ext.length/2);
+    out.push({i,poly,dwella:plen(inn),ext:plen(ext),j0:hyp(i0.p,o0.p),j1:hyp(i1.p,o1.p),rect:R,
+      fit:R.w<=bl+TOL()&&R.h<=bh+TOL(),cen:c0===c1?c0:c0+"/"+c1,a0:ang(i),a1:ang(i+1),midIn:inn[mi],midOut:ext[mo]});
+  }
+  return out;
+}
+
+// ---------- render ----------
+function render(){
+  const v=k=>(k==="nman"||k==="fpct")?parseFloat($(k).value):parseLen($(k).value);
+  if(!allow("arch:"+$("type").value)){paywall("full");$("type").value=lastType&&allow("arch:"+lastType)?lastType:"kumpass";}
+  lastType=$("type").value;
+  saveAll();
+  const type=$("type").value;
+  $("nmanWrap").hidden=$("nmode").value!=="man";
+  $("riseWrap").hidden=!NEEDS_RISE[type];
+  document.querySelectorAll(".ramp").forEach(el=>el.hidden=type!=="rampanti");
+  $("depthLbl").textContent=type==="arkipjan"?"Għoli tal-arkipjan (H)":"Għoli tas-samrott (ingroppa)";
+  const span=v("span"),h=v("rise"),t=v("depth"),gr=(parseFloat($("joint").value)||0.25)*($("unit").value==="mm"?25.4:1)/2;
+  let bl=v("blockL"),bh=v("blockH"); if(bh>bl)[bl,bh]=[bh,bl];
+  const out=$("out"),tbl=$("tbl");
+  const fail=m=>{out.innerHTML='<p class="err">'+m+'</p>';tbl.innerHTML="";$("tblNote").textContent="";window.LAST=null;$("pdfBtn").disabled=true;$("dxfBtn").disabled=true;};
+  if(!(span>0&&t>0)) return fail("Daħħal dawl u għoli tas-samrott akbar minn 0.");
+  if(NEEDS_RISE[type]&&!(h>0)) return fail("Daħħal l-għoli tal-ħnejja.");
+  const g=geom(type,{span,rise:h,t,stepR:v("stepR"),stepG:v("stepG"),fpct:v("fpct")});
+  if(g.err) return fail(g.err);
+  g.t=t;prep(g);
+
+  let n,S;
+  if($("nmode").value==="auto"){
+    if(!(bl>0&&bh>0)) return fail("Daħħal id-daqs tal-vaża.");
+    for(n=3;n<=151;n+=2){S=stones(g,n,gr,bl,bh);if(S&&S.every(s=>s.fit))break;}
+    if(n>151||!S) return fail("Is-samrott ma joħroġx minn din il-vaża. L-għoli tas-samrott ("+fmt(t)+") irid ikun inqas mill-wisgħa tal-vaża ("+fmt(bh)+").");
+  }else{
+    n=Math.max(3,Math.round(v("nman"))||3);
+    S=stones(g,n,gr,bl||1e9,bh||1e9);
+    if(!S) return fail("Ma stajtx naqsam il-ħnejja f'dan in-numru ta' samrotti.");
+  }
+  const allFit=S.every(s=>s.fit);
+  const mx=k=>Math.max(...S.map(s=>s.rect[k]));
+  out.innerHTML=`
+  ${n%2===0?'<p class="err">Numru par: m\'hemmx ġonta fin-nofs. Uża numru fard.</p>':''}
+  ${!allFit?'<p class="err">Xi samrotti ma joħorġux mill-vaża ('+fmt(bl)+' × '+fmt(bh)+'). Żid in-numru.</p>':''}
+  <p class="info">${n} samrotti${$("nmode").value==="man"?' · Vaża minima: <span>'+fmtUp(mx("w"))+' tul × '+fmtUp(mx("h"))+' wisgħa</span>':''}</p>
+  <div class="draw">${svg(g,S)}</div>
+  ${g.extra.length?'<p class="dims">'+g.extra.map(x=>'<span>'+x+'</span>').join("")+'</p>':''}
+  ${g.note?'<p class="note" style="margin:0">'+g.note+'</p>':''}`;
+
+  window.LAST={S,g,n,t,sym:g.sym,type,note:g.note||"",unit:$("unit").value,joint:$("joint").selectedOptions[0].text,span,h,bl,bh};
+  $("pdfBtn").disabled=false;$("dxfBtn").disabled=false;
+  const rows=g.sym?Math.ceil(n/2):n;
+  let html="";
+  for(let i=0;i<rows;i++){
+    const s=S[i],key=g.sym&&i===n-1-i,pair=!g.sym||key?String(i+1):(i+1)+" / "+(n-i);
+    const jt=Math.abs(s.j0-s.j1)>0.02*t?fmt(s.j0)+" → "+fmt(s.j1):fmt((s.j0+s.j1)/2);
+    html+=`<tr><td>${pair}${key?" (ġonta)":""}</td><td>${s.cen}</td><td>${fmt(s.dwella)}</td><td>${fmt(s.ext)}</td><td>${jt}</td><td>${s.a0.toFixed(1)}° → ${s.a1.toFixed(1)}°</td><td>${fmtUp(s.rect.w)} × ${fmtUp(s.rect.h)}</td><td class="${s.fit?"ok":"no"}">${s.fit?"Iva":"Le"}</td></tr>`;
+  }
+  tbl.innerHTML=`<table><thead><tr><th>Nru</th><th>Ċentru</th><th>Dwella</th><th>Ingroppa</th><th>Għoli</th><th>Angolu tal-fil</th><th>Daqs tal-vaża</th><th>Joħroġ?</th></tr></thead><tbody>${html}</tbody></table>`;
+  $("tblNote").textContent=(g.sym?"Is-samrotti huma simetriċi: 1 u l-aħħar huma l-istess, u hekk 'il ġewwa. ":"Fir-rampanti kull samrott hu differenti. ")+"Il-qisien huma netti, bit-tajn tal-fil imnaqqas. \"Daqs tal-vaża\" hu l-iżgħar rettangolu li fih joħroġ is-samrott. Il-fili joħorġu miċ-ċentru tal-ark"+(type==="elissi"?" (fl-elissi, nofs l-angolu bejn iż-żewġ foċi)":"")+"; l-angolu jitkejjel mill-orizzontal."+(g.note?" "+g.note:"");
+}
+
+function svg(g,S){
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  const grow=(x,y)=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);};
+  S.forEach(s=>s.poly.forEach(p=>grow(p[0],p[1])));
+  const W0=x1-x0;
+  const nRows=g.dims.filter(d=>d.k==="h").reduce((m,d)=>Math.max(m,d.row+1),0)+(g.sym?1:0);
+  const fsPre=W0*1.14*0.026;
+  const floor=Math.min(...g.jambs.map(j=>j[1]))-Math.max(W0*0.12,g.t,fsPre*(2.6+nRows*1.9));
+  grow(x0,floor);
+  const lim=y0-W0*0.9;
+  g.points.forEach(p=>{if(p.y>=lim)grow(p.x,p.y)});
+  const pad=W0*0.07;x0-=pad;x1+=pad;y0-=pad;y1+=pad*0.6;
+  const W=x1-x0,H=y1-y0,fs=W*0.026,sw=W*0.0022;
+  const P=([x,y])=>x.toFixed(2)+","+(-y).toFixed(2);
+  const cl=y=>Math.max(y,lim);
+  let o=`<svg viewBox="${x0} ${-y1} ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono,monospace" font-size="${fs}">`;
+  const G1=`stroke="var(--guide)" stroke-width="${sw}" fill="none" stroke-dasharray="${sw*4} ${sw*3}"`;
+  g.cons.forEach(c=>{
+    if(c.l)o+=`<line x1="${c.l[0][0]}" y1="${-cl(c.l[0][1])}" x2="${c.l[1][0]}" y2="${-cl(c.l[1][1])}" ${G1}/>`;
+    else{const [cx,cy,r,a0,a1]=c.a;const p0=[cx+r*Math.cos(a0),cy+r*Math.sin(a0)],p1=[cx+r*Math.cos(a1),cy+r*Math.sin(a1)];
+      if(Math.min(p0[1],p1[1])<lim)return;
+      o+=`<path d="M${P(p0)} A${r},${r} 0 ${Math.abs(a1-a0)>PI?1:0} ${a1>a0?0:1} ${P(p1)}" ${G1}/>`;}
+  });
+  const J=`stroke="var(--ink)" stroke-width="${sw*1.3}"`;
+  g.jambs.forEach(([x,y])=>o+=`<line x1="${x}" y1="${-y}" x2="${x}" y2="${-floor}" ${J}/>`);
+  if(g.sym)o+=`<line x1="${x0+pad}" y1="0" x2="${x1-pad}" y2="0" stroke="var(--guide)" stroke-width="${sw}"/>`;
+  for(const s of S){
+    o+=`<polygon points="${s.poly.map(P).join(" ")}" fill="var(--stone)" stroke="${s.fit?"var(--stone-edge)":"var(--bad)"}" stroke-width="${sw*1.2}" stroke-linejoin="round"/>`;
+    const cx=(s.midIn[0]+s.midOut[0])/2,cy=(s.midIn[1]+s.midOut[1])/2;
+    o+=`<text x="${cx}" y="${-cy}" fill="var(--ink)" text-anchor="middle" dominant-baseline="central" font-weight="500">${s.i+1}</text>`;
+  }
+  const lab=(x,y,txt,anc)=>`<text x="${x}" y="${y}" fill="var(--ink)" font-size="${fs*0.82}" font-weight="500" text-anchor="${anc}" dominant-baseline="central" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke">${txt}</text>`;
+  g.points.forEach(p=>{
+    if(p.y<lim){o+=`<text x="${p.x+fs*0.5}" y="${-lim}" fill="var(--accent)" font-weight="500">${p.n} ↓ ${fmt(-p.y)}</text>`;return;}
+    o+=`<circle cx="${p.x}" cy="${-p.y}" r="${sw*2.6}" fill="var(--accent)"/><text x="${p.x+fs*0.45}" y="${-p.y+fs*1.05}" fill="var(--accent)" font-weight="500">${p.n}</text>`;
+  });
+  g.dims.forEach(d=>{
+    if(d.k==="v"){let ym=(d.y1+d.y2)/2;if(ym<0)ym=Math.min(ym,-fs*(2.6+(nRows-0.3)*1.9));o+=lab(d.x-fs*0.4,-cl(ym),d.t,"end");}
+    else{const yy=fs*(2.6+d.row*1.9);
+      o+=`<line x1="${d.x1}" y1="${yy-fs*0.85}" x2="${d.x2}" y2="${yy-fs*0.85}" stroke="var(--muted)" stroke-width="${sw}"/>`;
+      o+=lab((d.x1+d.x2)/2,yy,d.t,"middle");}
+  });
+  if(g.sym){const a=Math.max(...g.jambs.map(j=>Math.abs(j[0]))),dy=fs*(2.6+(nRows-1)*1.9)-fs*0.85;
+    o+=`<line x1="${-a}" y1="${dy}" x2="${a}" y2="${dy}" stroke="var(--muted)" stroke-width="${sw}"/>`;
+    o+=lab(a*0.5,dy+fs*0.85,"AB = "+fmt(2*a),"middle");}
+  return o+"</svg>";
+}
+
+// ---------- PDF ----------
+function tImg(doc,str,x,y,hmm,o={}){
+  const sc=12,c=document.createElement("canvas"),ctx=c.getContext("2d");
+  const font=(o.bold?"600 ":"400 ")+(hmm*sc)+'px "IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif';
+  ctx.font=font;const w=Math.ceil(ctx.measureText(str).width)+6;
+  c.width=w;c.height=Math.ceil(hmm*sc*1.35);
+  ctx.font=font;ctx.fillStyle="#000";ctx.textBaseline="top";ctx.fillText(str,3,hmm*sc*0.12);
+  const wm=w/sc,hm=c.height/sc,xx=o.align==="center"?x-wm/2:o.align==="right"?x-wm:x;
+  doc.addImage(c.toDataURL("image/png"),"PNG",xx,y,wm,hm);
+}
+function orient(s,k){
+  const q=s.rect.q,c=Math.cos(q),sn=Math.sin(q);
+  const rot=([x,y])=>[(x*c+y*sn)*k,(-x*sn+y*c)*k];
+  let P=s.poly.map(rot),mi=rot(s.midIn),mo=rot(s.midOut);
+  let best=null;
+  for(let r=0;r<4;r++){
+    const sc=(mo[1]-mi[1])/Math.hypot(mo[0]-mi[0],mo[1]-mi[1]);
+    if(!best||sc>best.sc)best={sc,P:P.map(p=>p.slice()),mi:mi.slice(),mo:mo.slice()};
+    const r90=([x,y])=>[-y,x];P=P.map(r90);mi=r90(mi);mo=r90(mo);
+  }
+  return best;
+}
+async function makePdf(){
+  const L=window.LAST;if(!L)throw new Error("no data");
+  try{await Promise.all([document.fonts.load('400 20px "IBM Plex Sans Condensed"'),document.fonts.load('600 20px "IBM Plex Sans Condensed"')]);}catch(e){}
+  const k=L.unit==="mm"?1:25.4;
+  const {jsPDF}=window.jspdf;
+  const SZ=[["a4",210,297],["a3",297,420],["a2",420,594],["a1",594,841],["a0",841,1189]];
+  const M=8,TOP=L.note?30:25,BOT=11;
+  let doc=null;
+  const list=L.sym?L.S.slice(0,Math.ceil(L.n/2)):L.S;
+  list.forEach(s=>{
+    const best=orient(s,k);
+    let P=best.P;
+    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;P.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)});
+    const W=x1-x0,H=y1-y0,needW=Math.max(W+2*M,130),needH=H+2*M+TOP+BOT;
+    let pg=null;
+    for(const [nm,a,b] of SZ){
+      if(needW<=a&&needH<=b){pg={nm,o:"portrait",w:a,h:b};break;}
+      if(needW<=b&&needH<=a){pg={nm,o:"landscape",w:b,h:a};break;}
+    }
+    if(!pg)pg={nm:"a0",o:"portrait",w:841,h:1189};
+    if(!doc)doc=new jsPDF({unit:"mm",format:pg.nm,orientation:pg.o});else doc.addPage(pg.nm,pg.o);
+    const ox=(pg.w-W)/2-x0, oy=M+TOP+(pg.h-2*M-TOP-BOT-H)/2+y1;
+    const T=([x,y])=>[ox+x,oy-y];
+    doc.setDrawColor(150);doc.setLineWidth(0.2);doc.setLineDashPattern([2,1.5],0);
+    doc.rect(ox+x0,oy-y1,W,H);
+    doc.setLineDashPattern([],0);
+    doc.setDrawColor(0);doc.setLineWidth(0.35);
+    for(let j=0;j<P.length;j++){const a=T(P[j]),b=T(P[(j+1)%P.length]);doc.line(a[0],a[1],b[0],b[1]);}
+    const n=L.n,i=s.i,key=L.sym&&(n%2===1&&i===(n-1)/2);
+    const title=!L.sym?"Moll "+(i+1)+"  ·  Samrott "+(i+1)+" minn "+n+"  ·  1 biċċa":key?"Moll "+(i+1)+"  ·  Samrott "+(i+1)+" (ġonta)  ·  1 biċċa":"Moll "+(i+1)+"  ·  Samrotti "+(i+1)+" u "+(n-i)+"  ·  2 biċċiet (aqleb il-moll għal "+(n-i)+")";
+    const jt=Math.abs(s.j0-s.j1)>0.02*L.t?fmt(s.j0,L.unit)+" → "+fmt(s.j1,L.unit):fmt((s.j0+s.j1)/2,L.unit);
+    tImg(doc,title,M,M,6,{bold:true});
+    tImg(doc,"Dwella: "+fmt(s.dwella,L.unit)+"   ·   Ingroppa: "+fmt(s.ext,L.unit)+"   ·   Għoli: "+jt+"   ·   Ċentru: "+s.cen,M,M+8,3.6);
+    tImg(doc,NAMES[L.type]+"   ·   Dawl "+fmt(L.span,L.unit)+(NEEDS_RISE[L.type]?", għoli "+fmt(L.h,L.unit):"")+"   ·   Vaża minima: "+fmtUp(s.rect.w,L.unit)+" × "+fmtUp(s.rect.h,L.unit)+"   ·   Tajn tal-fil: "+L.joint,M,M+13,3.6);
+    tImg(doc,"SKALA 1:1  ·  "+pg.nm.toUpperCase()+"  ·  Stampa \"Actual size\" / 100%",M,M+18,3.6,{bold:true});
+    if(L.note)tImg(doc,L.note,M,M+23,3.6,{bold:true});
+    const mo2=T(best.mo),mi2=T(best.mi);
+    tImg(doc,"INGROPPA",mo2[0],mo2[1]+1.5,3.2,{align:"center"});
+    tImg(doc,"DWELLA",mi2[0],mi2[1]-6,3.2,{align:"center"});
+    const by=pg.h-M-6;
+    doc.setLineWidth(0.3);doc.line(M,by,M+100,by);
+    for(let t=0;t<=100;t+=10){const hh=t%50===0?3:1.5;doc.line(M+t,by-hh,M+t,by);}
+    tImg(doc,"100 mm – kejjel din il-linja biex tiċċekkja l-iskala",M,by+1.2,3);
+  });
+  return doc.output("blob");
+}
+// ---------- DXF ----------
+const ascii=t=>String(t).replace(/[ħĦ]/g,c=>c==="ħ"?"h":"H").replace(/[ġĠ]/g,c=>c==="ġ"?"g":"G").replace(/[ċĊ]/g,c=>c==="ċ"?"c":"C").replace(/[żŻ]/g,c=>c==="ż"?"z":"Z")
+  .replace(/½/g," 1/2").replace(/¼/g," 1/4").replace(/¾/g," 3/4").replace(/⅛/g," 1/8").replace(/⅜/g," 3/8").replace(/⅝/g," 5/8").replace(/⅞/g," 7/8").replace(/⅓/g," 1/3")
+  .replace(/([⁰¹²³⁴⁵⁶⁷⁸⁹]+)⁄([₀₁₂₃₄₅₆₇₈₉]+)/g,(m,a,b)=>" "+[...a].map(c=>"⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c)).join("")+"/"+[...b].map(c=>"₀₁₂₃₄₅₆₇₈₉".indexOf(c)).join("")).replace(/[^\x20-\x7e]/g,"").replace(/  +/g," ");
+const N6=v=>(+v).toFixed(5);
+function dPoly(pts,layer,closed){
+  return "0\nPOLYLINE\n8\n"+layer+"\n66\n1\n70\n"+(closed?1:0)+"\n10\n0\n20\n0\n30\n0\n"+
+    pts.map(p=>"0\nVERTEX\n8\n"+layer+"\n10\n"+N6(p[0])+"\n20\n"+N6(p[1])+"\n30\n0\n").join("")+"0\nSEQEND\n8\n"+layer+"\n";
+}
+const dLine=(p,q,layer)=>"0\nLINE\n8\n"+layer+"\n10\n"+N6(p[0])+"\n20\n"+N6(p[1])+"\n30\n0\n11\n"+N6(q[0])+"\n21\n"+N6(q[1])+"\n31\n0\n";
+const dCircle=(p,r,layer)=>"0\nCIRCLE\n8\n"+layer+"\n10\n"+N6(p[0])+"\n20\n"+N6(p[1])+"\n30\n0\n40\n"+N6(r)+"\n";
+const dText=(p,h,t,layer)=>"0\nTEXT\n8\n"+layer+"\n10\n"+N6(p[0])+"\n20\n"+N6(p[1])+"\n30\n0\n40\n"+N6(h)+"\n1\n"+ascii(t)+"\n";
+const dDoc=(ents,unit)=>"0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n9\n$INSUNITS\n70\n"+(unit==="mm"?4:1)+"\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n"+ents.join("")+"0\nENDSEC\n0\nEOF\n";
+async function makeDxfZip(){
+  const L=window.LAST;if(!L)throw new Error("no data");
+  const zip=new JSZip(), u=L.unit, th=u==="mm"?8:0.3, ents=[];
+  L.S.forEach(s=>{ents.push(dPoly(s.poly,"SAMROTTI",true));
+    ents.push(dText([(s.midIn[0]+s.midOut[0])/2,(s.midIn[1]+s.midOut[1])/2],th*1.5,String(s.i+1),"NUMRI"));});
+  L.g.points.forEach(p=>{ents.push(dCircle([p.x,p.y],th*0.3,"CENTRI"));ents.push(dText([p.x+th*0.5,p.y-th*1.5],th,p.n,"CENTRI"));});
+  L.g.cons.forEach(c=>{if(c.l)ents.push(dLine(c.l[0],c.l[1],"KOSTRUZZJONI"));});
+  L.g.jambs.forEach(([x,y])=>ents.push(dLine([x,y],[x,y-L.t*2],"GNUB")));
+  const yt=Math.min(...L.g.jambs.map(j=>j[1]))-L.t*2.6;
+  ents.push(dText([L.g.jambs[0][0],yt],th*1.2,NAMES[L.type]+" - dawl "+fmt(L.span,u)+(NEEDS_RISE[L.type]?", gholi "+fmt(L.h,u):"")+" - "+L.n+" samrotti - tajn tal-fil "+L.joint,"NOTI"));
+  if(L.note)ents.push(dText([L.g.jambs[0][0],yt-th*2],th*1.2,L.note,"NOTI"));
+  zip.file(L.type+"_hnejja_kollha.dxf",dDoc(ents,u));
+  const list=L.sym?L.S.slice(0,Math.ceil(L.n/2)):L.S;
+  list.forEach(s=>{
+    const b=orient(s,1);
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;b.P.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)});
+    const P=b.P.map(([x,y])=>[x-x0,y-y0]),W=x1-x0,H=y1-y0;
+    const n=L.n,i=s.i,key=L.sym&&n%2===1&&i===(n-1)/2;
+    const nm=!L.sym?"samrott "+(i+1)+" (1 bicca)":key?"samrott "+(i+1)+" gonta (1 bicca)":"samrotti "+(i+1)+" u "+(n-i)+" (2 bicciet, aqleb il-moll)";
+    const e=[dPoly(P,"MOLL",true),dPoly([[0,0],[W,0],[W,H],[0,H]],"VAZA",true),
+      dText([0,H+th*2.2],th*1.3,"Moll "+(i+1)+" - "+nm,"NOTI"),
+      dText([0,H+th*0.8],th,"Dwella "+fmt(s.dwella,u)+" - Ingroppa "+fmt(s.ext,u)+" - Vaza "+fmtUp(W,u)+" x "+fmtUp(H,u),"NOTI"),
+      dText([b.mi[0]-x0,b.mi[1]-y0-th*1.6],th*0.8,"DWELLA","NOTI"),dText([b.mo[0]-x0,b.mo[1]-y0+th*0.6],th*0.8,"INGROPPA","NOTI")];
+    if(L.note)e.push(dText([0,-th*1.6],th,L.note,"NOTI"));
+    zip.file("moll_"+String(i+1).padStart(2,"0")+".dxf",dDoc(e,u));
+  });
+  return zip.generateAsync({type:"blob",compression:"DEFLATE"});
+}
+
+(async()=>{
+  let dl=null;
+  if(window.claude&&window.claude.use){try{dl=await window.claude.use("downloads");}catch(e){dl=null}if(!dl)return;}
+  else dl=window.HZ_SAVE||{save:async({filename,data})=>{const url=URL.createObjectURL(data);const a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);return {status:"saved"};}};
+  $("pdfPanel").hidden=false;
+  $("pdfBtn").addEventListener("click",async()=>{
+    if(!allow("pdf")){paywall("full");return;}
+    const msg=$("pdfMsg"),btn=$("pdfBtn");
+    btn.disabled=true;msg.textContent="Qed jinbena l-PDF…";
+    try{
+      const blob=await makePdf();
+      msg.textContent="";
+      const L=window.LAST;
+      await dl.save({filename:L.type+"_"+L.n+"_samrotti.pdf",data:blob});
+      msg.textContent="Il-PDF tniżżel.";
+    }catch(e){
+      const c=e&&e.code;
+      msg.textContent=c==="declined"?"":c==="rate_limited"?"Stenna ftit u erġa' pprova.":"Il-PDF ma niżilx. "+(e&&e.message||"");
+    }finally{btn.disabled=!window.LAST;}
+  });
+  $("dxfBtn").addEventListener("click",async()=>{
+    if(!allow("dxf")){paywall("pro");return;}
+    const msg=$("pdfMsg"),btn=$("dxfBtn");
+    btn.disabled=true;msg.textContent="Qed jinbena d-DXF…";
+    try{
+      const blob=await makeDxfZip();
+      msg.textContent="";
+      const L=window.LAST;
+      await dl.save({filename:L.type+"_"+L.n+"_samrotti_dxf.zip",data:blob});
+      msg.textContent="Id-DXF tniżżel.";
+    }catch(e){
+      const c=e&&e.code;
+      msg.textContent=c==="declined"?"":c==="rate_limited"?"Stenna ftit u erġa' pprova.":"Id-DXF ma niżilx. "+(e&&e.message||"");
+    }finally{btn.disabled=!window.LAST;}
+  });
+  $("sPdfPanel").hidden=false;
+  const wire=(id,make,name,what)=>$(id).addEventListener("click",async()=>{
+    const feat=id==="sDxfBtn"?"dxf":"pdf";if(!allow(feat)){paywall(feat==="dxf"?"pro":"full");return;}
+    const msg=$("sPdfMsg"),btn=$(id);
+    btn.disabled=true;msg.textContent="Qed jinbena "+what+"…";
+    try{const blob=await make();msg.textContent="";const L=window.SLAST;
+      await dl.save({filename:L.type+"_"+L.n+"_skaluni"+name,data:blob});msg.textContent=what.replace(/^(il-|id-)/,m=>m[0].toUpperCase()+m.slice(1))+" tniżżel.";}
+    catch(e){const c=e&&e.code;msg.textContent=c==="declined"?"":c==="rate_limited"?"Stenna ftit u erġa' pprova.":"Ma niżilx. "+(e&&e.message||"");}
+    finally{btn.disabled=!window.SLAST;}
+  });
+  wire("sPdfBtn",stairPdf,".pdf","il-PDF");
+  wire("sDxfBtn",stairDxf,"_dxf.zip","id-DXF");
+})();
+
+// ================= TARAĠ =================
+const SIDS=["stype","sH","sNmode","sR","sN","sRule","sW","sTL","sTW","rTW","rTL","rCorr","eL","eW","gTL","gTW","gBok","gBeb","gLap","gStart","sIng","sBack","sGal","sIrh"];
+const SLEN=["sH","sR","sRule","sW","sTL","sTW","rTW","rTL","eL","eW","gTL","gTW","gBok","gBeb","gLap","sIng","sBack","sGal","sIrh"];
+const SNAMES={dritt:"Taraġ dritt",pjanijiet:"Taraġ bil-pjanijiet",raggj:"Taraġ tar-raġġ",elissi:"Taraġ elissi",garigor:"Taraġ garigor"};
+const IN=x=>$("unit").value==="mm"?x*25.4:x;
+const PT=([x,y])=>x.toFixed(2)+","+(-y).toFixed(2);
+const kvTable=rows=>'<table><tbody>'+rows.map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join("")+'</tbody></table>';
+
+function clipHP(poly,f){
+  const out=[];
+  for(let i=0;i<poly.length;i++){
+    const P=poly[i],Q=poly[(i+1)%poly.length],fp=f(P),fq=f(Q);
+    if(fp>=0)out.push(P);
+    if((fp>=0)!==(fq>=0)){const t=fp/(fp-fq);out.push([P[0]+t*(Q[0]-P[0]),P[1]+t*(Q[1]-P[1])]);}
+  }
+  return out;
+}
+function cutCircle(poly,r){
+  const ins=p=>p[0]*p[0]+p[1]*p[1]<r*r;
+  const k0=poly.findIndex(p=>!ins(p));
+  if(k0<0)return [];
+  poly=poly.slice(k0).concat(poly.slice(0,k0));
+  const out=[];let entry=null;
+  for(let i=0;i<poly.length;i++){
+    const P=poly[i],Q=poly[(i+1)%poly.length];
+    if(!ins(P))out.push(P);
+    const dx=Q[0]-P[0],dy=Q[1]-P[1],a=dx*dx+dy*dy,b=2*(P[0]*dx+P[1]*dy),c=P[0]*P[0]+P[1]*P[1]-r*r,disc=b*b-4*a*c;
+    if(!(a>0)||disc<=0)continue;
+    const sq=Math.sqrt(disc),ts=[(-b-sq)/(2*a),(-b+sq)/(2*a)].filter(t=>t>0&&t<1);
+    for(const t of ts){
+      const X=[P[0]+t*dx,P[1]+t*dy];
+      if(2*a*t+b<0){out.push(X);entry=X;}
+      else{
+        if(entry){let a0=Math.atan2(entry[1],entry[0]);const a1=Math.atan2(X[1],X[0]);
+          while(a0<a1)a0+=2*PI;const N=Math.max(4,Math.ceil((a0-a1)/0.04));
+          for(let j=1;j<N;j++){const th=a0+(a1-a0)*j/N;out.push([r*Math.cos(th),r*Math.sin(th)]);}}
+        out.push(X);entry=null;
+      }
+    }
+  }
+  return out;
+}
+function pip(pt,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>pt[1])!==(b[1]>pt[1])&&pt[0]<(b[0]-a[0])*(pt[1]-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;}
+function runsInside(pts,poly){const runs=[];let cur=[];for(const p of pts){if(pip(p,poly))cur.push(p);else{if(cur.length>1)runs.push(cur);cur=[];}}if(cur.length>1)runs.push(cur);return runs;}
+function rectPts(hx,hy,N){const c=[[hx,-hy],[hx,hy],[-hx,hy],[-hx,-hy],[hx,-hy]],o=[];for(let i=0;i<4;i++)for(let j=0;j<N;j++){const t=j/N;o.push([c[i][0]+(c[i+1][0]-c[i][0])*t,c[i][1]+(c[i+1][1]-c[i][1])*t]);}o.push(c[0]);return o;}
+function circPts(r,N){const o=[];for(let j=0;j<=N;j++){const t=2*PI*j/N;o.push([r*Math.cos(t),r*Math.sin(t)]);}return o;}
+function stepSection(G,R,b,g){
+  const A=[0,0],F=[G+b,0],C=[0,-R],Hh=[b,-R],L=Math.hypot(G,R),nv=[R/L,-G/L];
+  return [A,F,[F[0]+g*nv[0],F[1]+g*nv[1]],[Hh[0]+g*nv[0],Hh[1]+g*nv[1]],Hh,C];
+}
+function garStep(a0,X,Y,lap,rIn){
+  const a1=a0+PI/6,c0=Math.cos(a0),s0=Math.sin(a0),c1=Math.cos(a1),s1=Math.sin(a1);
+  let P=[[-X,-Y],[X,-Y],[X,Y],[-X,Y]];
+  P=clipHP(P,p=>-(c1*p[1]-s1*p[0]));
+  P=clipHP(P,p=>(c0*p[1]-s0*p[0])+lap);
+  return cutCircle(P,rIn);
+}
+function sSvg(b,body){
+  const W0=b.x1-b.x0,H0=b.y1-b.y0,pad=Math.max(W0,H0)*0.04;
+  const x0=b.x0-pad,y1=b.y1+pad,W=W0+2*pad,H=H0+2*pad,fs=Math.max(W,H*0.9)*0.032,sw=Math.max(W,H)*0.0022;
+  return `<svg viewBox="${x0} ${-y1} ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono,monospace" font-size="${fs}">`+body(fs,sw)+"</svg>";
+}
+const sPoly=(pts,fill,stroke,sw,extra="")=>`<polygon points="${pts.map(PT).join(" ")}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round" ${extra}/>`;
+const sLine=(pts,stroke,sw,dash)=>`<polyline points="${pts.map(PT).join(" ")}" fill="none" stroke="${stroke}" stroke-width="${sw}"${dash?` stroke-dasharray="${dash}"`:""}/>`;
+const sText=(p,t,fs,o={})=>`<text x="${p[0]}" y="${-p[1]}" fill="${o.fill||"var(--ink)"}" font-size="${fs}" font-weight="500" text-anchor="${o.anc||"middle"}" dominant-baseline="central" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke">${t}</text>`;
+const okMark=b=>b?'<span class="ok">✓</span>':'<span class="no">✗</span>';
+
+function sRender(){
+  saveAll();
+  const ty=$("stype").value,man=$("sNmode").value==="man",ga=ty==="garigor";
+  const wi=ty==="raggj"||ty==="elissi";
+  document.querySelectorAll("#stairMode label[data-t]").forEach(el=>el.hidden=!el.dataset.t.split(" ").includes(ty));
+  $("sNwrap").hidden=!man;$("sRwrap").hidden=man||ga||wi;
+  const v=k=>parseLen($(k).value);
+  const out=$("sOut"),tbl=$("sTbl");
+  const fail=m=>{out.innerHTML='<p class="err">'+m+'</p>';tbl.innerHTML="";$("sNote").textContent="";window.SLAST=null;$("sPdfBtn").disabled=true;$("sDxfBtn").disabled=true;};
+  const H=v("sH");
+  if(!(H>0))return fail("Daħħal l-għoli mill-madum sal-madum.");
+  if(wi){const warn=[],res=sWinder(ty,H,man,warn);if(res.err)return fail(res.err);
+    out.innerHTML=warn.map(w=>'<p class="err">'+w+'</p>').join("")+'<p class="info">'+res.head+'</p><div class="draw">'+res.svg+'</div>';
+    tbl.innerHTML=res.table;$("sNote").textContent=res.note||"";
+    window.SLAST={type:ty,unit:$("unit").value,n:res.n,R:res.R,pieces:res.pieces,cad:res.cad};
+    $("sPdfBtn").disabled=false;$("sDxfBtn").disabled=false;return;}
+  let n;
+  if(man){n=Math.round(parseFloat($("sN").value));if(!(n>=2))return fail("In-numru ta' skaluni jrid ikun mill-inqas 2.");}
+  else if(ga){n=Math.floor(H/IN(7)+1e-6);if(n<2)return fail("L-għoli huwa żgħir wisq għal garigor.");}
+  else{const Rd=v("sR");if(!(Rd>0))return fail("Daħħal l-alzatura mixtieqa.");n=Math.max(2,Math.round(H/Rd));while(H/n>IN(6.5)+TOL())n++;}
+  const R=H/n,warn=[];
+  const res=ga?sGarigor(H,n,R,warn):sStraight(ty,H,n,R,warn,man);
+  if(res.err)return fail(res.err);
+  out.innerHTML=warn.map(w=>'<p class="err">'+w+'</p>').join("")+'<p class="info">'+res.head+'</p><div class="draw">'+res.svg+'</div>';
+  tbl.innerHTML=res.table;$("sNote").textContent=res.note||"";
+  window.SLAST={type:ty,unit:$("unit").value,n,R,pieces:res.pieces,cad:res.cad};
+  $("sPdfBtn").disabled=false;$("sDxfBtn").disabled=false;
+}
+
+function sStraight(ty,H,n,R,warn,man){
+  const v=k=>parseLen($(k).value);
+  const rule=v("sRule"),W=v("sW"),ing=v("sIng")||0,b=v("sBack")||0,gal=v("sGal")||0,irh=v("sIrh")||0;
+  if(!(rule>0&&W>0))return {err:"Daħħal \"2 alzaturi + pedata\" u l-wisa' tat-taraġ."};
+  const G=rule-2*R;
+  if(!(G>0))return {err:"Il-pedata toħroġ żero jew inqas. Kabbar \"2 alzaturi + pedata\"."};
+  if(R>IN(6.5)+TOL())warn.push("L-alzatura ("+fmt(R)+") hi aktar minn 6½\".");
+  if(G<IN(10)-TOL()||G>IN(12)+TOL())warn.push("Il-pedata ("+fmt(G)+") mhix bejn 10\" u 12\".");
+  if(rule<IN(23)-TOL()||rule>IN(25)+TOL())warn.push("2 alzaturi + pedata ("+fmt(rule)+") mhux bejn 23\" u 25\".");
+  const sec=stepSection(G,R,b,gal),len=W+ing,run=(n-1)*G,ang=Math.atan2(R,G)*180/PI,box=minRect(sec);
+  const piece={fixed:true,poly:sec,rect:box,marks:[[[0,-R],[G,0]]],
+    labels:[{p:[G*0.3,-R*0.3],t:"QUDDIEM (lavur)"},{p:[G+b*0.35,-IN(0.9)],t:"WARA"}],
+    title:"Skaluna  ·  "+n+" biċċiet",
+    lines:["Alzatura "+fmt(R)+"   ·   Pedata "+fmt(G)+"   ·   Ħarġa wara "+fmt(b)+"   ·   Galgnu "+fmt(gal),
+      "Tul tal-iskaluna "+fmt(len)+" (wisa' "+fmt(W)+" + ingall "+fmt(ing)+")   ·   Vaża minima "+fmtUp(box.w)+" × "+fmtUp(box.h)+" × "+fmtUp(len),
+      SNAMES[ty]+"   ·   Għoli "+fmt(H)+"   ·   "+n+" skaluni"]};
+  const rows=[["Skaluni (alzaturi)",String(n)],["Alzatura",fmt(R)],["Pedata",fmt(G)],["2 alzaturi + pedata",fmt(2*R+G)],
+    ["Angolu tat-taraġ",ang.toFixed(1)+"°"],["Tul tal-iskaluna",fmt(len)],["Vaża għal kull skaluna",fmtUp(box.w)+" × "+fmtUp(box.h)+" × "+fmtUp(len)]];
+  if(irh>0)rows.push(["Tal-konkos bl-irħam: l-ewwel tarġa",fmt(R-irh)+" ("+fmt(R)+" − "+fmt(irh)+")"]);
+  let svg,cad={polys:[],circles:[],texts:[]},head,note="";
+  if(ty==="dritt"){
+    rows.splice(4,0,["Tul tal-branka",fmt(run)+" (mill-wiċċ tal-ewwel skaluna sal-aħħar)"]);
+    const steps=[];for(let k=0;k<n;k++)steps.push(sec.map(([x,y])=>[x+k*G,y+(k+1)*R]));
+    const lo=[[-IN(24),0],[IN(30),0]],up=[[run,H],[run+G+IN(36),H]];
+    let y0=0;steps.forEach(s=>s.forEach(p=>y0=Math.min(y0,p[1])));
+    const xd=run+G+IN(42);
+    svg=sSvg({x0:-IN(24)-run*0.06,x1:xd+run*0.2+IN(10),y0:Math.min(y0-IN(4),-run*0.1),y1:H+IN(6)},(fs,sw)=>{
+      let o=sLine(lo,"var(--ink)",sw*1.4)+sLine(up,"var(--ink)",sw*1.4);
+      o+=sLine([[0,0],[run,H]],"var(--guide)",sw,`${sw*4} ${sw*3}`);
+      steps.forEach((s,k)=>{o+=sPoly(s,"var(--stone)","var(--stone-edge)",sw*1.1);});
+      o+=sLine([[xd,0],[xd,H]],"var(--muted)",sw);
+      o+=sText([xd+fs*0.4,H/2],"H = "+fmt(H),fs*0.85,{anc:"start"});
+      o+=sText([G/2,R+fs*1.1],"P = "+fmt(G),fs*0.8);
+      o+=sText([-fs*0.4,R/2],"A = "+fmt(R),fs*0.8,{anc:"end"});
+      o+=sText([run/2,-fs*2.2],n+" skaluni · tul tal-branka "+fmt(run)+" · "+ang.toFixed(1)+"°",fs*0.85);
+      return o;});
+    steps.forEach(s=>cad.polys.push({pts:s,closed:true,layer:"SKALUNI"}));
+    cad.polys.push({pts:lo,layer:"ART"},{pts:up,layer:"ART"});
+    head=n+" skaluni · alzatura "+fmt(R)+" · pedata "+fmt(G)+" · tul tal-branka "+fmt(run);
+  }else{
+    const TL=v("sTL"),TW=v("sTW");
+    if(!(TL>0&&TW>0))return {err:"Daħħal il-qisien tat-tromba."};
+    const lens=[TL,TW-W,TL-W,TW-W];
+    const ra=(s,a,c)=>s===0?[TW-W,a,TW,c]:s===1?[TW-W-c,TL-W,TW-W-a,TL]:s===2?[0,TL-W-c,W,TL-W-a]:[W+a,0,W+c,W];
+    const ctr=(s,d)=>s===0?[TW-W/2,d]:s===1?[TW-W-d,TL-W/2]:s===2?[W/2,TL-W-d]:[W+d,W/2];
+    const corner=[null,[TW-W/2,TL-W/2],[W/2,TL-W/2],[W/2,W/2]];
+    if(W>TW+TOL()||W>TL+TOL())return {err:"It-taraġ huwa usa' mit-tromba."};
+    let rem=n-1,level=0;const fl=[],la=[];
+    for(let s=0;s<4&&rem>0;s++){
+      if(s>0&&lens[s]-W<-TOL())return {err:"It-tromba trid tkun mill-inqas darbtejn il-wisa' tat-taraġ ("+fmt(2*W)+")."};
+      const maxT=Math.max(0,Math.floor((lens[s]-W)/G+1e-6));
+      if(rem<=maxT){fl.push({s,t:rem,from:level});level+=rem;rem=0;break;}
+      if(s===3)break;
+      if(maxT>0){fl.push({s,t:maxT,from:level});level+=maxT;rem-=maxT;}
+      la.push({s,at:maxT*G,level:level+1});level+=1;rem-=1;
+    }
+    if(rem>0)return {err:"It-taraġ ma jidħolx f'din it-tromba f'dawra waħda. Kabbar it-tromba jew naqqas il-pedata."};
+    const last=fl[fl.length-1]||{s:0,t:0};
+    const path=[ctr(0,0)];for(let s=1;s<=last.s;s++)path.push(corner[s]);path.push(ctr(last.s,last.t*G));
+    rows.splice(4,0,...fl.map((f,i)=>["Branka "+(i+1),f.t+" pedati"+(i<la.length?" → pjan "+fmt(W)+" × "+fmt(W)+" jew akbar":" → sular ta' fuq")]));
+    rows.splice(4+fl.length,0,["Pjanijiet",String(la.length)]);
+    svg=sSvg({x0:0,x1:TW,y0:-Math.max(TL,TW)*0.13,y1:TL},(fs,sw)=>{
+      let o="";
+      la.forEach(l=>{const r=ra(l.s,l.at,lens[l.s]);o+=`<rect x="${r[0]}" y="${-r[3]}" width="${r[2]-r[0]}" height="${r[3]-r[1]}" fill="var(--line)" stroke="var(--stone-edge)" stroke-width="${sw}"/>`;});
+      fl.forEach(f=>{for(let i=0;i<f.t;i++){const r=ra(f.s,i*G,(i+1)*G);
+        o+=`<rect x="${r[0]}" y="${-r[3]}" width="${r[2]-r[0]}" height="${r[3]-r[1]}" fill="var(--stone)" stroke="var(--stone-edge)" stroke-width="${sw}"/>`;
+        const c=ctr(f.s,(i+0.5)*G),off=(f.s===0||f.s===2)?[W*0.32*(f.s===0?1:-1),0]:[0,W*0.32*(f.s===1?1:-1)];
+        o+=sText([c[0]+off[0],c[1]+off[1]],String(f.from+i+1),Math.min(fs*0.7,G*0.7));}});
+      la.forEach(l=>{const r=ra(l.s,l.at,lens[l.s]);o+=sText([(r[0]+r[2])/2+W*0.18,(r[1]+r[3])/2+W*0.18],"PJAN",fs*0.7,{fill:"var(--muted)"});});
+      o+=sLine(path,"var(--accent)",sw*1.2,`${sw*5} ${sw*3}`);
+      o+=`<rect x="0" y="${-TL}" width="${TW}" height="${TL}" fill="none" stroke="var(--ink)" stroke-width="${sw*2.2}"/>`;
+      const p0=ctr(0,0);o+=sText([p0[0],p0[1]-fs*1.1],"↑ TLUGĦ",fs*0.8,{fill:"var(--accent)"});
+      const pe=path[path.length-1];o+=sText([pe[0],pe[1]],"FUQ",fs*0.8,{fill:"var(--accent)"});
+      o+=sText([TW/2,-fs*2.8],"Tromba "+fmt(TW)+" × "+fmt(TL)+" · linja tat-tlugħ (blu)",fs*0.8,{fill:"var(--muted)"});
+      return o;});
+    const rp=r=>[[r[0],r[1]],[r[2],r[1]],[r[2],r[3]],[r[0],r[3]]];
+    cad.polys.push({pts:rp([0,0,TW,TL]),closed:true,layer:"TROMBA"});
+    fl.forEach(f=>{for(let i=0;i<f.t;i++)cad.polys.push({pts:rp(ra(f.s,i*G,(i+1)*G)),closed:true,layer:"PEDATI"});});
+    la.forEach(l=>cad.polys.push({pts:rp(ra(l.s,l.at,lens[l.s])),closed:true,layer:"PJANIJIET"}));
+    cad.polys.push({pts:path,layer:"LINJA_TLUGH"});
+    head=n+" skaluni · alzatura "+fmt(R)+" · pedata "+fmt(G)+" · "+fl.length+" brankiet, "+la.length+" pjanijiet";
+    note="Il-brankiet idur mat-tromba mil-lemin ('il fuq fil-pjanta). Il-pjanijiet huma kwadri daqs il-wisa' tat-taraġ; fejn l-aħħar pedata ma tasalx sal-kantuniera, il-pjan jitwal.";
+  }
+  if(!man){
+    const opt=[];for(const m of [n-1,n,n+1]){if(m<2)continue;const r=H/m,g=rule-2*r;
+      opt.push(`<tr${m===n?' style="font-weight:600"':""}><td>${m}</td><td>${fmt(r)} ${okMark(r<=IN(6.5)+TOL())}</td><td>${g>0?fmt(g)+" "+okMark(g>=IN(10)-TOL()&&g<=IN(12)+TOL()):"—"}</td><td>${g>0?fmt((m-1)*g):"—"}</td></tr>`);}
+    var optT='<p class="note" style="margin:14px 0 6px">Għażliet oħra (b\'"2 alzaturi + pedata" = '+fmt(rule)+'):</p><table><thead><tr><th>Skaluni</th><th>Alzatura</th><th>Pedata</th><th>Tul tal-branka</th></tr></thead><tbody>'+opt.join("")+'</tbody></table>';
+  }
+  return {head,svg,table:kvTable(rows)+(optT||""),pieces:[piece],cad,note:note+(note?" ":"")+"Il-qisien huma bil-lest, mill-madum sal-madum. Il-moll tal-iskaluna huwa skont il-paġna 70: ħarġa wara u galgnu taħt."};
+}
+
+function sGarigor(H,n,R,warn){
+  const v=k=>parseLen($(k).value);
+  const TL=v("gTL"),TW=v("gTW"),bok=v("gBok"),beb=v("gBeb"),lap=v("gLap")||0,ing=v("sIng")||0,st=(parseFloat($("gStart").value)||0)*PI/180;
+  if(!(TL>0&&TW>0&&bok>0&&beb>=0))return {err:"Daħħal il-qisien tat-tromba, il-bokka u l-bebbuxa."};
+  const hx=TW/2,hy=TL/2,rIn=bok/2,rB=rIn+beb,hm=Math.min(hx,hy);
+  if(rB>=hm)return {err:"Il-bebbuxa ma tidħolx f'din it-tromba."};
+  if(TL<IN(48)-TOL()||TW<IN(48)-TOL())warn.push("Il-ktieb: it-tromba tal-garigor trid tkun mhux anqas minn 4' × 4'.");
+  if(R<IN(7)-TOL())warn.push("L-alzatura ("+fmt(R)+") hi anqas minn 7\": il-headroom ("+fmt(12*R)+") ma jasalx 7'.");
+  const rw=(hm+rB)/2,Gw=rw*PI/6,X=hx+ing,Y=hy+ing,square=Math.abs(TL-TW)<TOL(),Pd=square?3:6;
+  const turn=[];for(let j=0;j<Math.min(n,12);j++)turn.push(garStep(st+j*PI/6,X,Y,lap,rIn));
+  const sc=Math.max(X,Y)/300;
+  const pieces=[],mrows=[];
+  for(let id=0;id<Math.min(Pd,n);id++){
+    const a0=st+id*PI/6,am=a0+PI/12,poly=garStep(a0,X,Y,lap,rIn),js=[];
+    for(let j=id;j<n;j+=Pd)js.push(j+1);
+    const dWall=Math.min(hx/Math.max(1e-9,Math.abs(Math.cos(am))),hy/Math.max(1e-9,Math.abs(Math.sin(am))));
+    const rayPts=[];for(let r=0;r<=dWall+ing;r+=sc)rayPts.push([r*Math.cos(a0),r*Math.sin(a0)]);
+    const marks=[].concat(runsInside(rectPts(hx,hy,400),poly),runsInside(circPts(rB,720),poly),runsInside(circPts(rw,720),poly),runsInside(rayPts,poly));
+    const box=minRect(poly),at=r=>[r*Math.cos(am),r*Math.sin(am)];
+    pieces.push({poly,rect:box,marks,midIn:at((rIn+rB)/2),midOut:at(dWall),
+      labels:[{p:at(rB+IN(1.5)),t:"BEBBUXA"},{p:at(rw),t:"LINJA TAT-TLUGĦ"},{p:at(dWall-IN(2.5)),t:"ĦAJT"}],
+      title:"Moll "+(id+1)+"  ·  skaluni "+js.join(", ")+"  ·  "+js.length+" biċċiet",
+      lines:["Alzatura "+fmt(R)+"   ·   12-il skaluna f'dawra   ·   M'usa' skwerra "+fmt(lap)+"   ·   Ingall "+fmt(ing),
+        "Bokka "+fmt(bok)+"   ·   Bebbuxa "+fmt(beb)+"   ·   Tromba "+fmt(TW)+" × "+fmt(TL)+"   ·   Vaża minima "+fmtUp(box.w)+" × "+fmtUp(box.h),
+        "Taraġ garigor   ·   Għoli "+fmt(H)+"   ·   "+n+" skaluni"]});
+    mrows.push(`<tr><td>Moll ${id+1}</td><td>${js.join(", ")}</td><td>${js.length}</td><td>${fmtUp(box.w)} × ${fmtUp(box.h)}</td></tr>`);
+  }
+  const head12=12*R;
+  const rows=[["Skaluni (alzaturi)",String(n)],["Alzatura",fmt(R)+" "+okMark(R>=IN(7)-TOL())],["Skaluni f'dawra","12 (30° kull waħda)"],
+    ["Dawriet",(n/12).toFixed(2)],["Headroom (12 alzaturi)",fmt(head12)+" "+okMark(head12>=IN(84)-TOL())],
+    ["Linja tat-tlugħ","raġġ "+fmt(rw)+" miċ-ċentru"],["Pedata fuq il-linja tat-tlugħ",fmt(Gw)],["2 alzaturi + pedata (linja tat-tlugħ)",fmt(2*R+Gw)],
+    ["Bebbuxa (dijametru ta' barra)",fmt(2*rB)],["Forom differenti",String(Math.min(Pd,n))+(square?" (tromba kwadra)":" (tromba mhux kwadra)")]];
+  const table=kvTable(rows)+'<p class="note" style="margin:14px 0 6px">Mollijiet:</p><table><thead><tr><th>Moll</th><th>Skaluni</th><th>Biċċiet</th><th>Vaża minima (pjanta)</th></tr></thead><tbody>'+mrows.join("")+'</tbody></table>';
+  const svg=sSvg({x0:-X,x1:X,y0:-Y-Math.max(X,Y)*0.12,y1:Y},(fs,sw)=>{
+    let o=`<rect x="${-X}" y="${-Y}" width="${2*X}" height="${2*Y}" fill="none" stroke="var(--guide)" stroke-width="${sw}" stroke-dasharray="${sw*4} ${sw*3}"/>`;
+    turn.forEach((p,j)=>{o+=sPoly(p,"var(--stone)","var(--stone-edge)",sw*1.1,'fill-opacity="0.85"');});
+    o+=`<circle cx="0" cy="0" r="${rB}" fill="none" stroke="var(--stone-edge)" stroke-width="${sw*1.2}"/>`;
+    o+=`<circle cx="0" cy="0" r="${rIn}" fill="var(--bg)" stroke="var(--ink)" stroke-width="${sw*1.2}"/>`;
+    o+=`<circle cx="0" cy="0" r="${rw}" fill="none" stroke="var(--accent)" stroke-width="${sw*1.2}" stroke-dasharray="${sw*8} ${sw*3} ${sw*1.5} ${sw*3}"/>`;
+    o+=`<rect x="${-hx}" y="${-hy}" width="${2*hx}" height="${2*hy}" fill="none" stroke="var(--ink)" stroke-width="${sw*2.2}"/>`;
+    turn.forEach((p,j)=>{const am=st+j*PI/6+PI/12,r=(rw+hm)/2;o+=sText([r*Math.cos(am),r*Math.sin(am)],String(j+1),fs*0.85,j===0?{fill:"var(--accent)"}:{});});
+    o+=sText([0,-Y-fs*1.3],"Tromba "+fmt(TW)+" × "+fmt(TL)+" · linja tat-tlugħ (blu) · ingall (punteġġjat)",fs*0.75,{fill:"var(--muted)"});
+    return o;});
+  const cad={polys:[],circles:[{c:[0,0],r:rIn,layer:"BOKKA"},{c:[0,0],r:rB,layer:"BEBBUXA"},{c:[0,0],r:rw,layer:"LINJA_TLUGH"}],texts:[]};
+  turn.forEach(p=>cad.polys.push({pts:p,closed:true,layer:"SKALUNI"}));
+  cad.polys.push({pts:[[-hx,-hy],[hx,-hy],[hx,hy],[-hx,hy]],closed:true,layer:"HAJT"},{pts:[[-X,-Y],[X,-Y],[X,Y],[-X,Y]],closed:true,layer:"INGALL"});
+  return {head:n+" skaluni · alzatura "+fmt(R)+" · "+(n/12).toFixed(2)+" dawriet · pedata "+fmt(Gw)+" fuq il-linja tat-tlugħ",svg,table,pieces,cad,
+    note:"Il-pjanta turi l-ewwel dawra (skaluni 1–"+Math.min(n,12)+"); id-dawriet ta' fuq jirrepetu l-istess. Kull skaluna fiha l-m'usa' skwerra fuq quddiem (fejn toqgħod fuq ta' taħtha) u l-ingall ġol-ħajt. Il-forma tal-bebbuxa (bastun, dent, żgoxx) timmarkaha fuq il-kantun skont il-paġna 75."};
+}
+
+// ---------- taraġ tar-raġġ u elissi ----------
+function pcRing(mp,pt){
+  if(!mp||!mp.length)return null;
+  let pick=mp.find(pg=>pip(pt,pg[0].slice(0,-1)));
+  if(!pick)pick=mp.reduce((a,b)=>Math.abs(polyArea(b[0]))>Math.abs(polyArea(a[0]))?b:a);
+  return pick[0].slice(0,-1);
+}
+function polyArea(P){let s=0;for(let i=0;i<P.length;i++){const a=P[i],b=P[(i+1)%P.length];s+=a[0]*b[1]-b[0]*a[1];}return s/2;}
+function rayRect(P,d,x0,x1,y0,y1){let t=Infinity;
+  if(d[0]>1e-12)t=Math.min(t,(x1-P[0])/d[0]);if(d[0]<-1e-12)t=Math.min(t,(x0-P[0])/d[0]);
+  if(d[1]>1e-12)t=Math.min(t,(y1-P[1])/d[1]);if(d[1]<-1e-12)t=Math.min(t,(y0-P[1])/d[1]);
+  return [P[0]+t*d[0],P[1]+t*d[1]];}
+function chooseN(H,Lw,rule,even){
+  let best=null;
+  for(let n=Math.max(3,Math.ceil(H/IN(6.5)-1e-9));n<=Math.max(4,Math.ceil(H/IN(4.5)));n++){
+    if(even&&(n-1)%2)continue;
+    const R=H/n,g=Lw/(n-1),v=2*R+g,sc=10*Math.max(0,IN(23)-v,v-IN(25))+3*Math.max(0,IN(10)-g,g-IN(12))+Math.abs(v-rule);
+    if(!best||sc<best.sc)best={n,sc};
+  }
+  return best?best.n:null;
+}
+function sWinder(ty,H,man,warn){
+  if(typeof polygonClipping==="undefined")return {err:"Il-programm għadu qed jitgħabba. Erġa' pprova f'mument."};
+  const v=k=>parseLen($(k).value);
+  const rule=v("sRule"),W=v("sW"),ing=v("sIng")||0,b=v("sBack")||0;
+  if(!(rule>0&&W>0))return {err:"Daħħal \"2 alzaturi + pedata\" u l-wisa' tat-taraġ."};
+  const dw=W<=IN(36)+TOL()?W/2:IN(19);
+  let G;
+  if(ty==="raggj"){
+    const TW=v("rTW"),TL=v("rTL");
+    if(!(TW>0&&TL>0))return {err:"Daħħal il-qisien tat-tromba."};
+    const sp=TW-2*W;if(!(sp>0))return {err:"It-tromba trid tkun usa' minn darbtejn il-wisa' tat-taraġ ("+fmt(2*W)+")."};
+    const rs=sp/2,O=[TW/2,TL-TW/2];if(!(O[1]>0))return {err:"It-tromba qasira wisq għal din il-wisa'."};
+    const rw=rs+dw,xw=W-dw,Aw=rw*PI/2,Lw=2*(O[1]+Aw),corr=$("rCorr").value!=="le";
+    const walk=q=>{const p=q-Lw/2,sd=p<0?-1:1,a=Math.abs(p);
+      if(a<=Aw){const ph=a/rw;return [O[0]+sd*rw*Math.sin(ph),O[1]+rw*Math.cos(ph)];}
+      return [sd<0?xw:TW-xw,O[1]-(a-Aw)];};
+    const innerAt=(u,sd)=>{const q=rs*PI/2;if(u<=q){const ph=u/rs;return [O[0]+sd*rs*Math.sin(ph),O[1]+rs*Math.cos(ph)];}return [sd<0?W:TW-W,O[1]-(u-q)];};
+    const nat=a=>a<=Aw?rs*(a/rw):rs*PI/2+(a-Aw);
+    const spine=[[W,-TL],[TW-W,-TL],[TW-W,O[1]]];for(let i=1;i<60;i++){const t=PI*i/60;spine.push([O[0]+rs*Math.cos(t),O[1]+rs*Math.sin(t)]);}spine.push([W,O[1]]);
+    G={Lw,walk,even:true,box:[0,TW,0,TL],outer:[[-ing,-TL],[TW+ing,-TL],[TW+ing,TL+ing],[-ing,TL+ing]],hole:spine,
+      wall:[[0,0],[0,TL],[TW,TL],[TW,0]],
+      risers(n){
+        const g=Lw/(n-1),v0=((Lw/2)%g+g)%g<1e-6||g-((Lw/2)%g)<1e-6?0:g/2;
+        let bal=null;
+        if(corr){
+          const r=Math.floor((Aw-v0)/g+1e-9)+1,mMax=Math.floor((Lw/2-v0)/g+1e-9);
+          for(let m=Math.max(2*r-1,Math.ceil((Aw-v0)/g-1e-9),1);m<=mMax;m++){
+            const pm=v0+m*g,U=nat(pm);let d,d0;
+            if(v0===0){d=m>1?2*(m*g-U)/(m*(m-1)):0;d0=g-(m-1)*d;}else{d=(g*(m+0.5)-U)/(m*m/2);d0=g-m*d;}
+            if(d0>0.18*g||m===mMax){const us=[];let u=v0===0?0:d0/2;us.push(u);for(let k=1;k<=m;k++){u+=v0===0?d0+(k-1)*d:d0+k*d;us.push(u);}bal={m,us};break;}
+          }
+        }
+        const out=[];
+        for(let j=0;j<n;j++){
+          const q=j*g,p=q-Lw/2,sd=p<0?-1:1,a=Math.abs(p),Wp=walk(q);
+          let I;
+          if(Math.abs(p)<1e-6)I=[O[0],O[1]+rs];
+          else if(bal){const k=Math.round((a-v0)/g);I=k<=bal.m?innerAt(bal.us[k],sd):innerAt(nat(a),sd);}
+          else I=innerAt(nat(a),sd);
+          let dx=Wp[0]-I[0],dy=Wp[1]-I[1];const L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;
+          out.push({I,Wp,E:rayRect(Wp,[dx,dy],0,TW,-1e9,TL)});
+        }
+        return out;
+      }};
+    if(Math.abs(TW-IN(84))>IN(1)||Math.abs(TL-IN(120))>IN(1))warn.push("Il-ktieb: it-taraġ tar-raġġ isir ġo tromba ta' 7' × 10' biss. Jekk it-tromba hi akbar, aħjar taraġ ieħor.");
+  }else{
+    const L=v("eL"),Wt=v("eW");
+    if(!(L>0&&Wt>0))return {err:"Daħħal il-qisien tat-tromba."};
+    const ai=L/2-W,bi=Wt-W;if(!(ai>0&&bi>0))return {err:"It-tromba żgħira wisq għal din il-wisa' tat-taraġ."};
+    const aw=ai+dw,bw=bi+dw,N=2400,th=[],cum=[0];
+    for(let i=0;i<=N;i++)th.push(PI-PI*i/N);
+    for(let i=1;i<=N;i++)cum.push(cum[i-1]+Math.hypot(aw*(Math.cos(th[i])-Math.cos(th[i-1])),bw*(Math.sin(th[i])-Math.sin(th[i-1]))));
+    const Lw=cum[N];
+    const thAt=q=>{let lo=0,hi=N;q=Math.max(0,Math.min(Lw,q));while(hi-lo>1){const m=(lo+hi)>>1;if(cum[m]<=q)lo=m;else hi=m;}const f=(q-cum[lo])/((cum[hi]-cum[lo])||1);return th[lo]+(th[hi]-th[lo])*f;};
+    const walk=q=>{const t=thAt(q);return [aw*Math.cos(t),bw*Math.sin(t)];};
+    const hole=[[ai,-Wt]];for(let i=0;i<=120;i++){const t=PI*i/120;hole.push([ai*Math.cos(t),bi*Math.sin(t)]);}hole.push([-ai,-Wt]);
+    const cF=Math.sqrt(Math.max(0,aw*aw-bw*bw));
+    G={Lw,walk,even:false,box:[-L/2,L/2,0,Wt],outer:[[-L/2-ing,-Wt],[L/2+ing,-Wt],[L/2+ing,Wt+ing],[-L/2-ing,Wt+ing]],hole,
+      wall:[[-L/2,0],[-L/2,Wt],[L/2,Wt],[L/2,0]],foci:[[-cF,0],[cF,0]],
+      risers(n){
+        const g=Lw/(n-1),out=[];
+        for(let j=0;j<n;j++){
+          const t=thAt(j*g),P=[aw*Math.cos(t),bw*Math.sin(t)];
+          let nx=Math.cos(t)/aw,ny=Math.sin(t)/bw;const l=Math.hypot(nx,ny);nx/=l;ny/=l;
+          const A=(nx/ai)**2+(ny/bi)**2,B=-2*(P[0]*nx/(ai*ai)+P[1]*ny/(bi*bi)),C=(P[0]/ai)**2+(P[1]/bi)**2-1,D=Math.max(0,B*B-4*A*C);
+          const ti=(-B-Math.sqrt(D))/(2*A);
+          out.push({I:[P[0]-ti*nx,P[1]-ti*ny],Wp:P,E:rayRect(P,[nx,ny],-L/2,L/2,-1e9,Wt)});
+        }
+        return out;
+      }};
+    if(L<IN(216)-TOL()||Wt<IN(84)-TOL())warn.push("Il-ktieb: it-tromba tat-taraġ elissi trid tkun mhux anqas minn 18' dawl u 7' wisa'.");
+  }
+  let n;
+  if(man){n=Math.round(parseFloat($("sN").value));if(!(n>=3))return {err:"In-numru ta' skaluni jrid ikun mill-inqas 3."};}
+  else{n=chooseN(H,G.Lw,rule,G.even);if(!n)return {err:"Ma nstabx numru ta' skaluni tajjeb għal dan l-għoli."};}
+  const R=H/n,g=G.Lw/(n-1);
+  if(R>IN(6.5)+TOL())warn.push("L-alzatura ("+fmt(R)+") hi aktar minn 6½\".");
+  if(g<IN(10)-TOL()||g>IN(12)+TOL())warn.push("Il-pedata fuq il-linja tat-tlugħ ("+fmt(g)+") mhix bejn 10\" u 12\".");
+  if(Math.abs(2*R+g-IN(24))>IN(1)+TOL())warn.push("2 alzaturi + pedata ("+fmt(2*R+g)+") mhux bejn 23\" u 25\".");
+  const rs=G.risers(n);
+  const big=Math.max(G.box[1]-G.box[0],G.box[3]-G.box[2])*4;
+  const tread=(j,bb,outer)=>{
+    const a=rs[j],c=rs[j+1],mid=G.walk((j+0.5)*g);
+    const ud=r=>{const dx=r.E[0]-r.I[0],dy=r.E[1]-r.I[1],l=Math.hypot(dx,dy)||1;return [dx/l,dy/l];};
+    const da=ud(a),dc=ud(c),cr=(d,o,p)=>d[0]*(p[1]-o[1])-d[1]*(p[0]-o[0]);
+    const sa=Math.sign(cr(da,a.I,mid))||1,sc=Math.sign(cr(dc,c.I,mid))||1;
+    let P=[[mid[0]-big,mid[1]-big],[mid[0]+big,mid[1]-big],[mid[0]+big,mid[1]+big],[mid[0]-big,mid[1]+big]];
+    P=clipHP(P,p=>sa*cr(da,a.I,p));
+    P=clipHP(P,p=>sc*cr(dc,c.I,p)+bb);
+    if(P.length<3)return null;
+    let mp;try{mp=polygonClipping.difference(polygonClipping.intersection([[P.concat([P[0]])]],[[outer.concat([outer[0]])]]),[[G.hole.concat([G.hole[0]])]]);}catch(e){return null;}
+    return pcRing(mp,mid);
+  };
+  const box=G.box,disp=[],pieces=[],groups=[];
+  const outerDisp=[[box[0],-1e5],[box[1],-1e5],[box[1],box[3]],[box[0],box[3]]];
+  let minIn=Infinity;
+  for(let j=0;j<n-1;j++){
+    const d=tread(j,0,outerDisp);if(!d)return {err:"Ma stajtx naħdem l-iskaluna "+(j+1)+". Ibdel il-qisien."};
+    disp.push(d);minIn=Math.min(minIn,Math.hypot(rs[j+1].I[0]-rs[j].I[0],rs[j+1].I[1]-rs[j].I[1]));
+    const m=tread(j,b,G.outer);if(!m)return {err:"Ma stajtx naħdem il-moll tal-iskaluna "+(j+1)+"."};
+    const rb=minRect(m),sig=[Math.round(rb.w*32),Math.round(rb.h*32),Math.round(Math.abs(polyArea(m))*2)].join(",");
+    let gq=groups.find(x=>x.sig===sig);
+    if(!gq){gq={sig,js:[],poly:m,rect:rb,j};groups.push(gq);}
+    gq.js.push(j+1);
+  }
+  const samp=[];for(let i=0;i<=400;i++)samp.push(G.walk(G.Lw*i/400));
+  const wallPts=[];for(let i=0;i<G.wall.length-1;i++)for(let k=0;k<=80;k++){const t=k/80;wallPts.push([G.wall[i][0]+(G.wall[i+1][0]-G.wall[i][0])*t,G.wall[i][1]+(G.wall[i+1][1]-G.wall[i][1])*t]);}
+  const mrows=[];
+  groups.forEach((gq,id)=>{
+    const j=gq.j,a=rs[j],c=rs[j+1],poly=gq.poly;
+    const nxt=[];for(let k=0;k<=60;k++){const t=k/60;nxt.push([c.I[0]+(c.E[0]-c.I[0])*t,c.I[1]+(c.E[1]-c.I[1])*t]);}
+    const marks=[].concat(runsInside(nxt,poly),runsInside(samp,poly),runsInside(wallPts,poly));
+    const mi=[(a.I[0]+c.I[0])/2,(a.I[1]+c.I[1])/2],mo=[(a.E[0]+c.E[0])/2,(a.E[1]+c.E[1])/2],wm=G.walk((j+0.5)*g);
+    const fr=[(a.I[0]+a.E[0])/2*0.7+wm[0]*0.3,(a.I[1]+a.E[1])/2*0.7+wm[1]*0.3];
+    pieces.push({poly,rect:gq.rect,marks,midIn:mi,midOut:mo,
+      labels:[{p:[mi[0]*0.8+wm[0]*0.2,mi[1]*0.8+wm[1]*0.2],t:"PUĠĠAMAN"},{p:[mo[0]*0.8+wm[0]*0.2,mo[1]*0.8+wm[1]*0.2],t:"ĦAJT"},{p:fr,t:"QUDDIEM"}],
+      title:"Moll "+(id+1)+"  ·  skaluni "+gq.js.join(", ")+"  ·  "+gq.js.length+(gq.js.length>1?" biċċiet":" biċċa"),
+      lines:["Alzatura "+fmt(R)+"   ·   Pedata fuq il-linja tat-tlugħ "+fmt(g)+"   ·   Ħarġa wara "+fmt(b)+"   ·   Ingall "+fmt(ing),
+        SNAMES[ty]+"   ·   Għoli "+fmt(H)+"   ·   "+n+" skaluni   ·   Vaża minima "+fmtUp(gq.rect.w)+" × "+fmtUp(gq.rect.h),
+        "Il-linja punteġġjata hija fejn toqgħod l-iskaluna ta' fuq. Għal naħa l-oħra tat-taraġ aqleb il-moll."]});
+    mrows.push(`<tr><td>Moll ${id+1}</td><td>${gq.js.join(", ")}</td><td>${gq.js.length}</td><td>${fmtUp(gq.rect.w)} × ${fmtUp(gq.rect.h)}</td></tr>`);
+  });
+  const [bx0,bx1,by0,by1]=box,Wd=bx1-bx0,Hd=by1-by0;
+  const svg=sSvg({x0:bx0,x1:bx1,y0:by0-Math.max(Wd,Hd)*0.12,y1:by1},(fs,sw)=>{
+    let o="";
+    disp.forEach(p=>o+=sPoly(p,"var(--stone)","var(--stone-edge)",sw));
+    o+=sPoly(G.hole.map(p=>[p[0],Math.max(p[1],by0)]),"var(--line)","var(--ink)",sw*1.4);
+    o+=sLine(samp,"var(--accent)",sw*1.2,`${sw*5} ${sw*3}`);
+    o+=sLine(G.wall,"var(--ink)",sw*2.4);
+    if(G.foci)G.foci.forEach((f,i)=>o+=`<circle cx="${f[0]}" cy="${-f[1]}" r="${sw*2.6}" fill="var(--accent)"/>`);
+    const tfs=Math.min(fs*0.75,g*0.55);
+    for(let j=0;j<n-1;j++){const wm=G.walk((j+0.5)*g),a=rs[j],c=rs[j+1],om=[(a.E[0]+c.E[0])/2,(a.E[1]+c.E[1])/2];
+      o+=sText([wm[0]*0.45+om[0]*0.55,wm[1]*0.45+om[1]*0.55],String(j+1),tfs);}
+    const p0=G.walk(0);o+=sText([p0[0],by0-fs*1.1],"↑ TLUGĦ",fs*0.75,{fill:"var(--accent)"});
+    const pe=G.walk(G.Lw);o+=sText([pe[0],by0-fs*1.1],"FUQ",fs*0.75,{fill:"var(--accent)"});
+    o+=sText([(bx0+bx1)/2,by0-fs*2.6],"Tromba "+fmt(Wd)+" × "+fmt(Hd)+" · linja tat-tlugħ (blu)",fs*0.75,{fill:"var(--muted)"});
+    return o;});
+  const cad={polys:[],circles:[],texts:[]};
+  cad.polys.push({pts:G.wall,layer:"HAJT"},{pts:G.hole,closed:true,layer:"PUGGAMAN"},{pts:samp,layer:"LINJA_TLUGH"});
+  disp.forEach(p=>cad.polys.push({pts:p,closed:true,layer:"SKALUNI"}));
+  const rows=[["Skaluni (alzaturi)",String(n)],["Alzatura",fmt(R)],["Pedata fuq il-linja tat-tlugħ",fmt(g)],["2 alzaturi + pedata",fmt(2*R+g)],
+    ["Tul tal-linja tat-tlugħ",fmt(G.Lw)],["Linja tat-tlugħ",fmt(dw)+" mill-puġġaman"],["L-iżgħar wisa' fuq il-puġġaman",fmt(minIn)],["Forom differenti",String(groups.length)]];
+  if(ty==="raggj")rows.push(["Korrezzjoni tat-taraġ",$("rCorr").value==="le"?"Le":"Iva"]);
+  const table=kvTable(rows)+'<p class="note" style="margin:14px 0 6px">Mollijiet (pjanta, bil-ħarġa wara u l-ingall):</p><table><thead><tr><th>Moll</th><th>Skaluni</th><th>Biċċiet</th><th>Vaża minima</th></tr></thead><tbody>'+mrows.join("")+'</tbody></table>';
+  const note=ty==="raggj"?"Il-linja tat-tlugħ hija maqsuma f'pedati ndaqs. Bil-korrezzjoni, l-iskaluni madwar ir-raġġ jinfirxu fuq il-puġġaman (l-iżgħar fin-nofs, u jikbru bil-mod sal-pedata sħiħa), kif fil-paġna 72–73. Mingħajr korrezzjoni kollha jiltaqgħu fit-tarf tal-ħajt tan-nofs.":
+    "Il-linja tat-tlugħ u l-puġġaman huma elissi (paġna 73). Kull fil huwa kartabun mal-elissi tal-linja tat-tlugħ, jiġifieri jaqsam l-angolu bejn il-foċi 1 u 2, bħall-ħnejja elissi.";
+  return {n,R,head:n+" skaluni · alzatura "+fmt(R)+" · pedata "+fmt(g)+" fuq il-linja tat-tlugħ · "+groups.length+" mollijiet",svg,table,pieces,cad,note};
+}
+
+function pieceTf(pc,k){
+  if(pc.fixed)return p=>[p[0]*k,p[1]*k];
+  const q=pc.rect.q,c=Math.cos(q),s=Math.sin(q);
+  let best=null;
+  for(let r=0;r<4;r++){
+    const f=p=>{let v=[(p[0]*c+p[1]*s)*k,(-p[0]*s+p[1]*c)*k];for(let i=0;i<r;i++)v=[-v[1],v[0]];return v;};
+    const mi=f(pc.midIn),mo=f(pc.midOut),sc=(mo[1]-mi[1])/Math.hypot(mo[0]-mi[0],mo[1]-mi[1]);
+    if(!best||sc>best.sc)best={sc,f};
+  }
+  return best.f;
+}
+function clipSeg(p,q,x0,y0,x1,y1){let t0=0,t1=1;const dx=q[0]-p[0],dy=q[1]-p[1];
+  for(const [pp,qq] of [[-dx,p[0]-x0],[dx,x1-p[0]],[-dy,p[1]-y0],[dy,y1-p[1]]]){if(Math.abs(pp)<1e-12){if(qq<0)return null;continue;}const r=qq/pp;if(pp<0){if(r>t1)return null;if(r>t0)t0=r;}else{if(r<t0)return null;if(r<t1)t1=r;}}
+  return [[p[0]+t0*dx,p[1]+t0*dy],[p[0]+t1*dx,p[1]+t1*dy]];}
+async function stairPdf(){
+  const L=window.SLAST;if(!L)throw new Error("no data");
+  try{await Promise.all([document.fonts.load('400 20px "IBM Plex Sans Condensed"'),document.fonts.load('600 20px "IBM Plex Sans Condensed"')]);}catch(e){}
+  const k=L.unit==="mm"?1:25.4,{jsPDF}=window.jspdf;
+  const SZ=[["a4",210,297],["a3",297,420],["a2",420,594]];
+  const M=8,BOT=11,OV=12;let doc=null;
+  const newPage=(nm,o)=>{if(!doc)doc=new jsPDF({unit:"mm",format:nm,orientation:o});else doc.addPage(nm,o);};
+  L.pieces.forEach(pc=>{
+    const f=pieceTf(pc,k),P=pc.poly.map(f),TOP=10+pc.lines.length*5+6;
+    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;P.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)});
+    const W=x1-x0,H=y1-y0,needW=Math.max(W+2*M,130),needH=H+2*M+TOP+BOT;
+    let pg=null;
+    for(const [nm,a,b] of SZ){if(needW<=a&&needH<=b){pg={nm,o:"portrait",w:a,h:b};break;}if(needW<=b&&needH<=a){pg={nm,o:"landscape",w:b,h:a};break;}}
+    let tiles;
+    if(!pg&&$("sPaper").value==="roll"&&Math.min(W,H+TOP+BOT)+2*M<=914){const w=W+2*M,h=H+2*M+TOP+BOT;pg={nm:[w,h],o:w>h?"landscape":"portrait",w,h};}
+    if(pg){tiles=[{pg,tx:x0-((pg.w-W)/2-M),ty:y1+((pg.h-2*M-TOP-BOT-H)/2),uw:pg.w-2*M,uh:pg.h-2*M-TOP-BOT}];}
+    else{
+      let best=null;
+      for(const o of ["portrait","landscape"]){const w=o==="portrait"?420:594,h=o==="portrait"?594:420,uw=w-2*M,uh=h-2*M-TOP-BOT;
+        const c=Math.ceil((W-OV)/(uw-OV)),r=Math.ceil((H-OV)/(uh-OV));if(!best||c*r<best.c*best.r)best={o,w,h,uw,uh,c,r};}
+      tiles=[];for(let r=0;r<best.r;r++)for(let c=0;c<best.c;c++)tiles.push({pg:{nm:"a2",o:best.o,w:best.w,h:best.h},tx:x0+c*(best.uw-OV),ty:y1-r*(best.uh-OV),uw:best.uw,uh:best.uh,r,c,R:best.r,C:best.c});
+    }
+    tiles.forEach((tl,ti)=>{
+      const pgx=tl.pg;newPage(pgx.nm,pgx.o);
+      const T=([x,y])=>[M+(x-tl.tx),M+TOP+(tl.ty-y)];
+      const cx0=M,cy0=M+TOP,cx1=M+tl.uw,cy1=M+TOP+tl.uh;
+      const seg=(a,b)=>{const s2=clipSeg(T(a),T(b),cx0,cy0,cx1,cy1);if(s2)doc.line(s2[0][0],s2[0][1],s2[1][0],s2[1][1]);};
+      if(tiles.length>1){doc.setDrawColor(190);doc.setLineWidth(0.15);doc.setLineDashPattern([],0);doc.rect(cx0,cy0,tl.uw,tl.uh);}
+      doc.setDrawColor(150);doc.setLineWidth(0.2);doc.setLineDashPattern([2,1.5],0);
+      const bb=[[x0,y1],[x1,y1],[x1,y0],[x0,y0]];for(let j=0;j<4;j++)seg(bb[j],bb[(j+1)%4]);
+      doc.setDrawColor(110);doc.setLineDashPattern([1.2,1],0);
+      (pc.marks||[]).forEach(m=>{const Q=m.map(f);for(let j=1;j<Q.length;j++)seg(Q[j-1],Q[j]);});
+      doc.setLineDashPattern([],0);doc.setDrawColor(0);doc.setLineWidth(0.35);
+      for(let j=0;j<P.length;j++)seg(P[j],P[(j+1)%P.length]);
+      tImg(doc,pc.title+(tiles.length>1?"  ·  folja "+(ti+1)+" minn "+tiles.length+" (ringiela "+(tl.r+1)+", kolonna "+(tl.c+1)+")":""),M,M,6,{bold:true});
+      pc.lines.forEach((ln,i)=>tImg(doc,ln,M,M+8+i*5,3.6));
+      tImg(doc,"SKALA 1:1  ·  "+(Array.isArray(pgx.nm)?"PLOTTER "+Math.round(pgx.w)+" × "+Math.round(pgx.h)+" mm":pgx.nm.toUpperCase())+"  ·  Stampa \"Actual size\" / 100%"+(tiles.length>1?"  ·  Il-folji jirkbu "+OV+" mm fuq xulxin: qabbel il-linji u waħħalhom":""),M,M+8+pc.lines.length*5,3.6,{bold:true});
+      (pc.labels||[]).forEach(lb=>{const q=T(f(lb.p));if(q[0]>cx0+10&&q[0]<cx1-10&&q[1]>cy0+4&&q[1]<cy1-2)tImg(doc,lb.t,q[0],q[1]-2.2,3.2,{align:lb.align||"center"});});
+      const by=pgx.h-M-6;doc.setLineWidth(0.3);doc.line(M,by,M+100,by);
+      for(let t=0;t<=100;t+=10){const hh=t%50===0?3:1.5;doc.line(M+t,by-hh,M+t,by);}
+      tImg(doc,"100 mm – kejjel din il-linja biex tiċċekkja l-iskala",M,by+1.2,3);
+    });
+  });
+  return doc.output("blob");
+}
+async function stairDxf(){
+  const L=window.SLAST;if(!L)throw new Error("no data");
+  const zip=new JSZip(),u=L.unit,th=u==="mm"?8:0.3,ents=[];
+  L.cad.polys.forEach(o=>ents.push(dPoly(o.pts,o.layer,!!o.closed)));
+  L.cad.circles.forEach(o=>ents.push(dCircle(o.c,o.r,o.layer)));
+  L.cad.texts.forEach(o=>ents.push(dText(o.p,o.h||th,o.t,o.layer||"NOTI")));
+  zip.file(L.type+"_tarag.dxf",dDoc(ents,u));
+  L.pieces.forEach((pc,i)=>{
+    const f=pieceTf(pc,1),P=pc.poly.map(f);
+    let x0=1e9,y0=1e9,y1=-1e9;P.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);y1=Math.max(y1,y)});
+    const sh=p=>{const q=f(p);return [q[0]-x0,q[1]-y0];};
+    const e=[dPoly(P.map(([x,y])=>[x-x0,y-y0]),"MOLL",true)];
+    (pc.marks||[]).forEach(m=>e.push(dPoly(m.map(sh),"MARKI",false)));
+    (pc.labels||[]).forEach(lb=>e.push(dText(sh(lb.p),th*0.8,lb.t,"NOTI")));
+    const Hh=y1-y0,nl=pc.lines.length;e.push(dText([0,Hh+th*(1.5*nl+1.6)],th*1.3,pc.title,"NOTI"));
+    pc.lines.forEach((ln,j)=>e.push(dText([0,Hh+th*(0.8+1.5*(nl-1-j))],th,ln,"NOTI")));
+    zip.file("moll_"+String(i+1).padStart(2,"0")+".dxf",dDoc(e,u));
+  });
+  return zip.generateAsync({type:"blob",compression:"DEFLATE"});
+}
+
+// ---------- bug report ----------
+const BUG_TO="mbmarks.mbm@gmail.com jew WhatsApp +356 7921 0844";
+$("bugBtn").addEventListener("click",async()=>{
+  const txt=$("bugTxt").value.trim(),msg=$("bugMsg"),pre=$("bugOut");
+  if(!txt){msg.textContent="Ikteb x'mar ħażin l-ewwel.";$("bugTxt").focus();return;}
+  const lab=k=>{const el=$(k);return el.tagName==="SELECT"?el.selectedOptions[0].text:el.value;};
+  const L=window.LAST;
+  const sLines=[];
+  if(MODE==="stairs"){document.querySelectorAll("#stairMode label").forEach(l=>{if(l.hidden)return;const el=l.querySelector("input,select");if(!el)return;
+    sLines.push(l.firstChild.textContent.trim()+": "+(el.tagName==="SELECT"?el.selectedOptions[0].text:el.value));});
+    sLines.push("Riżultat: "+(window.SLAST?window.SLAST.n+" skaluni":"żball"),"Messaġġ fuq l-iskrin: "+($("sOut").querySelector(".err")?.textContent||"xejn"));}
+  const rep=MODE==="stairs"?["RAPPORT TA' PROBLEMA – Taraġ","Data: "+new Date().toISOString().slice(0,16).replace("T"," "),"","Problema:",txt,"","Unità: "+lab("unit")].concat(sLines,["Apparat: "+navigator.userAgent]).join("\n"):["RAPPORT TA' PROBLEMA – Ħnejjiet","Data: "+new Date().toISOString().slice(0,16).replace("T"," "),"","Problema:",txt,"",
+    "Tip: "+lab("type"),"Unità: "+lab("unit"),"Dawl: "+lab("span"),
+    NEEDS_RISE[$("type").value]?"Għoli: "+lab("rise"):null,
+    "Għoli tas-samrott: "+lab("depth"),
+    $("type").value==="rampanti"?"Tarġa: "+lab("stepR")+" × "+lab("stepG")+", F "+lab("fpct")+"%":null,
+    "Tajn tal-fil: "+lab("joint"),"Vaża: "+lab("blockL")+" × "+lab("blockH"),
+    "Samrotti: "+lab("nmode")+($("nmode").value==="man"?" ("+lab("nman")+")":"")+(L?" → "+L.n:" → żball"),
+    "Messaġġ fuq l-iskrin: "+($("out").querySelector(".err")?.textContent||"xejn"),
+    "Apparat: "+navigator.userAgent].filter(x=>x!==null).join("\n");
+  pre.textContent=rep;
+  $("bugWa").href="https://wa.me/35679210844?text="+encodeURIComponent(rep);
+  $("bugSend").hidden=false;
+  let ok=false;
+  try{await navigator.clipboard.writeText(rep);ok=true;}catch(e){}
+  pre.hidden=ok;
+  if(!ok){const r=document.createRange();r.selectNodeContents(pre);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);}
+  msg.textContent=(ok?"Ir-rapport ġie kkupjat.":"Ikkopja r-rapport t'hawn taħt.")+" Ibgħatu fuq WhatsApp jew b'email.";
+});
+
+// ---------- access code (only outside Claude) ----------
+const GK="YGMtfq36d9TvuKK6PM6crCbjeTUJ",B32="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",EPOCH=Date.UTC(2026,0,1);
+const h32=str=>{let h=0x811c9dc5;for(const c of str){h^=c.charCodeAt(0);h=Math.imul(h,0x01000193)>>>0;}return h>>>0;};
+const dayNum=d=>Math.floor((d-EPOCH)/864e5);
+function checkCode(code){
+  const c=String(code||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(c.length!==8)return null;
+  let v=0;for(let i=7;i>=0;i--){const k=B32.indexOf(c[i]);if(k<0)return null;v=v*32+k;}
+  const payload=Math.floor(v/2**20),mac=v%2**20;
+  if((h32(GK+":"+payload)&0xfffff)!==mac)return null;
+  return payload>>8;
+}
+const dayStr=n=>new Date(EPOCH+n*864e5).toLocaleDateString("mt-MT",{day:"numeric",month:"long",year:"numeric"});
+function gate(){
+  if(window.HZ_APP||(window.claude&&window.claude.use))return;
+  const now=dayNum(Date.now());
+  let saved=null,seen=0;
+  try{saved=localStorage.getItem("hnejjaCode");seen=+localStorage.getItem("hnejjaSeen")||0;}catch(e){}
+  const tampered=seen&&now<seen-1;
+  try{if(!tampered)localStorage.setItem("hnejjaSeen",String(Math.max(seen,now)));}catch(e){}
+  const exp=saved?checkCode(saved):null;
+  if(exp!==null&&now<=exp&&!tampered){
+    $("gate").hidden=true;$("app").hidden=false;
+    $("gateBadge").hidden=false;$("gateBadge").textContent="Verżjoni tat-test · il-kodiċi jiswa sal-"+dayStr(exp);
+    return;
+  }
+  $("app").hidden=true;$("gate").hidden=false;
+  $("gateMsg").textContent=tampered?"Id-data tat-telefon mhix korretta. Irranġaha u erġa' pprova.":exp!==null?"Il-kodiċi tiegħek skada. Itlob kodiċi ġdid.":"Daħħal il-kodiċi li ngħatajt biex tuża l-programm.";
+}
+$("gateBtn").addEventListener("click",()=>{
+  const code=$("gateCode").value,exp=checkCode(code),now=dayNum(Date.now());
+  if(exp===null){$("gateErr").textContent="Dan il-kodiċi mhux validu. Iċċekkja li kitbitu sew.";return;}
+  if(now>exp){$("gateErr").textContent="Dan il-kodiċi skada fil-"+dayStr(exp)+".";return;}
+  try{localStorage.setItem("hnejjaCode",code);}catch(e){}
+  $("gateErr").textContent="";gate();
+});
+$("gateCode").addEventListener("keydown",e=>{if(e.key==="Enter")$("gateBtn").click();});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)gate();});
+gate();
+
+IDS.forEach(k=>$(k).addEventListener("input",render));
+SIDS.forEach(k=>$(k).addEventListener("input",sRender));
+function setMode(m){if(m==="stairs"&&!allow("stairs")){paywall("pro");m="arch";}MODE=m;$("archMode").hidden=m!=="arch";$("stairMode").hidden=m!=="stairs";
+  $("mArch").setAttribute("aria-pressed",String(m==="arch"));$("mStair").setAttribute("aria-pressed",String(m==="stairs"));
+  $("modeSub").textContent=m==="arch"?"Samrotti b'dwella ndaqs · numru fard · qisien netti bit-tajn imnaqqas":"Alzaturi u pedati ndaqs · 2 alzaturi + pedata = 23\"–25\" · mill-madum sal-madum";
+  if(m==="stairs")sRender();else render();}
+$("mArch").addEventListener("click",()=>setMode("arch"));
+$("mStair").addEventListener("click",()=>setMode("stairs"));
+if(!STAIRS_SAVED&&$("unit").value==="mm")SLEN.forEach(k=>{const x=parseLen($(k).value,"in");if(isFinite(x))$(k).value=String(Math.round(x*25.4));});
+let prevUnit=$("unit").value;
+$("unit").addEventListener("change",()=>{
+  const u=$("unit").value; if(u===prevUnit)return;
+  const f=u==="mm"?25.4:1/25.4;
+  ["span","rise","depth","stepR","stepG","blockL","blockH"].concat(SLEN).forEach(k=>{
+    const x=parseLen($(k).value,prevUnit); if(isFinite(x))$(k).value=u==="mm"?String(Math.round(x*f)):fmt(x*f,"in");
+  });
+  prevUnit=u; render(); sRender();
+});
+render();sRender();setMode(MODE);
+window.HZ_REFRESH=()=>{render();if(MODE==="stairs")sRender();};
+</script>

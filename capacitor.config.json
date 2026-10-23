@@ -1,0 +1,8 @@
+{
+  "appId": "mt.hzuztalbini.app",
+  "appName": "Ħżuż tal-Bini",
+  "webDir": "www",
+  "plugins": {
+    "PrivacyScreen": { "enable": false }
+  }
+}
