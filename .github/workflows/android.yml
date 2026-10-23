@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       HAS_KEY: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
@@ -22,8 +22,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-
-      - uses: android-actions/setup-android@v3
 
       - name: Install
         run: npm ci
