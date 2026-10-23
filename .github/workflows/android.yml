@@ -45,7 +45,7 @@ jobs:
           chmod +x gradlew
           set -o pipefail
           if ! ./gradlew bundleRelease assembleRelease --no-daemon --stacktrace 2>&1 | tee "$RUNNER_TEMP/gradle.log"; then
-            grep -E "error:|Error|FAILURE|What went wrong|Could not|> " "$RUNNER_TEMP/gradle.log" | grep -v "^> Task" | head -40 | while IFS= read -r l; do echo "::error::$l"; done
+            { grep -A 14 "What went wrong" "$RUNNER_TEMP/gradle.log"; grep -E "Caused by|e: |error:|build.gradle' line" "$RUNNER_TEMP/gradle.log" | head -15; } | grep -v "^\s*$" | head -45 | while IFS= read -r l; do echo "::error::$l"; done
             exit 1
           fi
 
