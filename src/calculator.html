@@ -132,7 +132,7 @@ h2{font-size:1.05rem;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06e
 
   <section class="panel" id="pdfPanel" hidden>
     <h2>PDF u DXF</h2>
-    <p class="note" style="margin:0 0 10px">Moll wieħed għal kull par ta' samrotti (1 u l-aħħar, 2 u ta' qablu, u hekk) u wieħed għall-ġonta, 1:1. Fir-rampanti kull samrott għandu l-moll tiegħu. Il-karta (A4, A3 jew A2) tintgħażel skont id-daqs. Fil-printer agħżel "Actual size" jew 100%, mhux "Fit to page". Kull paġna għandha linja ta' 100 mm biex tiċċekkja l-iskala. Id-DXF jinżel f'file .zip: fih il-ħnejja kollha u moll f'kull file, 1:1 fl-unità magħżula, għall-AutoCAD jew is-CNC.</p>
+    <p class="note" style="margin:0 0 10px">Moll wieħed għal kull forma ta' samrott, 1:1: samrotti li huma l-istess jaqsmu l-istess moll (fil-kumpass, tal-vojt u tal-kalament, moll wieħed għal kollha; fl-oħrajn wieħed għal kull par u wieħed għall-ġonta). Il-karta (A4, A3 jew A2) tintgħażel skont id-daqs. Fil-printer agħżel "Actual size" jew 100%, mhux "Fit to page". Kull paġna għandha linja ta' 100 mm biex tiċċekkja l-iskala. Id-DXF jinżel f'file .zip: fih il-ħnejja kollha u moll f'kull file, 1:1 fl-unità magħżula, għall-AutoCAD jew is-CNC.</p>
     <div class="pdfrow"><button id="pdfBtn" type="button">Niżżel il-PDF</button><button id="dxfBtn" type="button">Niżżel id-DXF</button><span id="pdfMsg" class="note"></span></div>
   </section>
 
@@ -625,6 +625,18 @@ function orient(s,k){
   }
   return best;
 }
+function groupStones(L){
+  const polyA=P=>{let a=0;for(let i=0;i<P.length;i++){const p=P[i],q=P[(i+1)%P.length];a+=p[0]*q[1]-q[0]*p[1];}return Math.abs(a/2);};
+  const same=(x,y)=>Math.abs(x-y)<=Math.max(Math.abs(x),Math.abs(y))*0.002+1e-9;
+  const single={kumpass:1,vojt:1,kalament:1}[L.type];
+  const G=[];
+  L.S.forEach(s=>{const a=polyA(s.poly);let g=G.find(g=>same(g.s.rect.w,s.rect.w)&&same(g.s.rect.h,s.rect.h)&&same(g.a,a));if(!g){g={s,a,nums:[]};G.push(g);}g.nums.push(s.i+1);});
+  return G.map((g,k)=>{const n=L.n,c=g.nums.length,key=L.sym&&n%2===1&&c===1&&g.nums[0]===(n+1)/2&&!single;
+    const which=c===n&&c>1?"samrotti kollha (1–"+n+")":(c>1?"samrotti ":"samrott ")+g.nums.join(", ")+(key?" (ġonta)":"");
+    const symStone=L.type!=="elissi"&&L.type!=="arkipjan"&&!String(g.s.cen).includes("/");
+    const flip=c>1&&!single&&!symStone&&L.sym&&g.nums.some(x=>x>(n+1)/2)&&g.nums.some(x=>x<(n+1)/2);
+    return {s:g.s,k:k+1,label:which,count:c,flip,title:"Moll "+(k+1)+"  ·  "+which+"  ·  "+c+(c>1?" biċċiet":" biċċa")+(flip?" (aqleb il-moll għan-naħa l-oħra)":"")};});
+}
 async function makePdf(){
   const L=window.LAST;if(!L)throw new Error("no data");
   try{await Promise.all([document.fonts.load('400 20px "IBM Plex Sans Condensed"'),document.fonts.load('600 20px "IBM Plex Sans Condensed"')]);}catch(e){}
@@ -633,9 +645,8 @@ async function makePdf(){
   const SZ=[["a4",210,297],["a3",297,420],["a2",420,594],["a1",594,841],["a0",841,1189]];
   const M=8,TOP=L.note?30:25,BOT=11;
   let doc=null;
-  const list=L.sym?L.S.slice(0,Math.ceil(L.n/2)):L.S;
-  list.forEach(s=>{
-    const best=orient(s,k);
+  groupStones(L).forEach(gr=>{
+    const s=gr.s,best=orient(s,k);
     let P=best.P;
     let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;P.forEach(([x,y])=>{x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y)});
     const W=x1-x0,H=y1-y0,needW=Math.max(W+2*M,130),needH=H+2*M+TOP+BOT;
@@ -653,8 +664,7 @@ async function makePdf(){
     doc.setLineDashPattern([],0);
     doc.setDrawColor(0);doc.setLineWidth(0.35);
     for(let j=0;j<P.length;j++){const a=T(P[j]),b=T(P[(j+1)%P.length]);doc.line(a[0],a[1],b[0],b[1]);}
-    const n=L.n,i=s.i,key=L.sym&&(n%2===1&&i===(n-1)/2);
-    const title=!L.sym?"Moll "+(i+1)+"  ·  Samrott "+(i+1)+" minn "+n+"  ·  1 biċċa":key?"Moll "+(i+1)+"  ·  Samrott "+(i+1)+" (ġonta)  ·  1 biċċa":"Moll "+(i+1)+"  ·  Samrotti "+(i+1)+" u "+(n-i)+"  ·  2 biċċiet (aqleb il-moll għal "+(n-i)+")";
+    const title=gr.title;
     const jt=Math.abs(s.j0-s.j1)>0.02*L.t?fmt(s.j0,L.unit)+" → "+fmt(s.j1,L.unit):fmt((s.j0+s.j1)/2,L.unit);
     tImg(doc,title,M,M,6,{bold:true});
     tImg(doc,"Dwella: "+fmt(s.dwella,L.unit)+"   ·   Ingroppa: "+fmt(s.ext,L.unit)+"   ·   Għoli: "+jt+"   ·   Ċentru: "+s.cen,M,M+8,3.6);
@@ -696,13 +706,11 @@ async function makeDxfZip(){
   ents.push(dText([L.g.jambs[0][0],yt],th*1.2,NAMES[L.type]+" - dawl "+fmt(L.span,u)+(NEEDS_RISE[L.type]?", gholi "+fmt(L.h,u):"")+" - "+L.n+" samrotti - tajn tal-fil "+L.joint,"NOTI"));
   if(L.note)ents.push(dText([L.g.jambs[0][0],yt-th*2],th*1.2,L.note,"NOTI"));
   zip.file(L.type+"_hnejja_kollha.dxf",dDoc(ents,u));
-  const list=L.sym?L.S.slice(0,Math.ceil(L.n/2)):L.S;
-  list.forEach(s=>{
-    const b=orient(s,1);
+  groupStones(L).forEach(gr=>{
+    const s=gr.s,i=gr.k-1,b=orient(s,1);
     let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;b.P.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)});
     const P=b.P.map(([x,y])=>[x-x0,y-y0]),W=x1-x0,H=y1-y0;
-    const n=L.n,i=s.i,key=L.sym&&n%2===1&&i===(n-1)/2;
-    const nm=!L.sym?"samrott "+(i+1)+" (1 bicca)":key?"samrott "+(i+1)+" gonta (1 bicca)":"samrotti "+(i+1)+" u "+(n-i)+" (2 bicciet, aqleb il-moll)";
+    const nm=gr.label+" ("+gr.count+(gr.count>1?" bicciet":" bicca")+(gr.flip?", aqleb il-moll":"")+")";
     const e=[dPoly(P,"MOLL",true),dPoly([[0,0],[W,0],[W,H],[0,H]],"VAZA",true),
       dText([0,H+th*2.2],th*1.3,"Moll "+(i+1)+" - "+nm,"NOTI"),
       dText([0,H+th*0.8],th,"Dwella "+fmt(s.dwella,u)+" - Ingroppa "+fmt(s.ext,u)+" - Vaza "+fmtUp(W,u)+" x "+fmtUp(H,u),"NOTI"),
