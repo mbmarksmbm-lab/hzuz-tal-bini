@@ -1299,7 +1299,8 @@ function checkCode(code){
   if((h32(GK+":"+payload)&0xfffff)!==mac)return null;
   return payload>>8;
 }
-const dayStr=n=>new Date(EPOCH+n*864e5).toLocaleDateString("mt-MT",{day:"numeric",month:"long",year:"numeric"});
+const MTM=["Jannar","Frar","Marzu","April","Mejju","Ġunju","Lulju","Awwissu","Settembru","Ottubru","Novembru","Diċembru"];
+const dayStr=n=>{const d=new Date(EPOCH+n*864e5);return d.getUTCDate()+" "+MTM[d.getUTCMonth()]+" "+d.getUTCFullYear();};
 function gate(){
   if(window.HZ_APP||(window.claude&&window.claude.use))return;
   const now=dayNum(Date.now());

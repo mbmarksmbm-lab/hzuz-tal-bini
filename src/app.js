@@ -21,8 +21,12 @@ const DEFAULT_PRICE={full_lifetime:"€100",pro_lifetime:"€150",pro_upgrade_li
 
 const FREE_ARCH=["arkipjan","kumpass"];
 const RANK={free:0,full:1,pro:2};
-let ent="free";
-try{ent=localStorage.getItem("hzEnt")||"free";}catch(e){}
+let storeEnt="free",ent="free";
+try{storeEnt=localStorage.getItem("hzEnt")||"free";}catch(e){}
+// test codes (5-day codes from the code generator) unlock Pro until they expire
+function testInfo(){try{const c=localStorage.getItem("hzTest");if(!c||typeof checkCode!=="function")return null;const e=checkCode(c);return e!==null&&dayNum(Date.now())<=e?e:null;}catch(x){return null;}}
+const best=()=>{const t=testInfo();return t!==null&&RANK[storeEnt]<2?"pro":storeEnt;};
+ent=storeEnt;
 window.HZ_ALLOW=f=>{
   if(f.startsWith("arch:"))return RANK[ent]>=1||FREE_ARCH.includes(f.slice(5));
   if(f==="pdf")return RANK[ent]>=1;
@@ -81,6 +85,7 @@ box.innerHTML=`<div class="hzbox" role="dialog" aria-modal="true" aria-labelledb
     </section>
   </div>
   <p class="note" style="margin:0">"Fix-xahar": tħallas id-dħul darba, imbagħad €1 fix-xahar. Tista' tieqaf meta trid minn Google Play → Abbonamenti; jekk terġa' tibda, tħallas biss l-€1. Min diġà xtara Full iħallas biss id-differenza għal Pro.</p>
+  <div class="hzrow" style="justify-content:flex-start"><label for="hzCode" style="flex:1;min-width:150px">Kodiċi tat-test<input id="hzCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX"></label><button type="button" class="hzalt" id="hzCodeBtn" style="align-self:flex-end">Daħħal</button></div>
   <p class="note" id="hzMsg" style="margin:0;font-weight:600"></p>
   <div class="hzrow"><button type="button" class="hzalt" id="hzRestore">Irrestawra x-xiri</button><button type="button" id="hzClose">Agħlaq</button></div>
 </div>`;
@@ -115,14 +120,15 @@ async function ads(show){
 function applyTier(){
   document.querySelectorAll("#type option").forEach(o=>{o.dataset.t=o.dataset.t||o.textContent;o.textContent=o.dataset.t+(window.HZ_ALLOW("arch:"+o.value)?"":"  · Full");});
   const ms=$("mStair");if(ms)ms.textContent=RANK[ent]>=2?"Taraġ":"Taraġ · Pro";
-  const bd=$("hzBadge");if(bd)bd.textContent=ent==="pro"?"Pro":ent==="full"?"Full":"B'xejn";
+  const ti=testInfo(),bd=$("hzBadge");
+  if(bd)bd.textContent=ti!==null&&RANK[storeEnt]<2?"Pro (test sal-"+dayStr(ti)+")":ent==="pro"?"Pro":ent==="full"?"Full":"B'xejn";
   const {PrivacyScreen}=PL();
   if(PrivacyScreen&&isNative()){(ent==="free"?PrivacyScreen.enable():PrivacyScreen.disable()).catch(()=>{});}
   ads(ent==="free");
 }
 function setEnt(e){
-  const changed=e!==ent;ent=e;
-  try{localStorage.setItem("hzEnt",e);}catch(x){}
+  storeEnt=e;try{localStorage.setItem("hzEnt",e);}catch(x){}
+  const nb=best(),changed=nb!==ent;ent=nb;
   applyTier();
   if(changed&&window.HZ_REFRESH)window.HZ_REFRESH();
 }
@@ -164,6 +170,15 @@ document.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",as
     if(own("pro_entry")||(own("full_entry")&&own("pro_entry_upgrade")))return order(SUB_ID);
     pendingSub=true;return order(own("full_entry")?"pro_entry_upgrade":"pro_entry");}
 }));
+$("hzCodeBtn").addEventListener("click",()=>{
+  const c=$("hzCode").value.trim();
+  if(typeof checkCode!=="function"){msg("Erġa' pprova f'mument.");return;}
+  const e=checkCode(c);
+  if(e===null){msg("Dan il-kodiċi mhux validu. Iċċekkja li kitbitu sew.");return;}
+  if(dayNum(Date.now())>e){msg("Dan il-kodiċi skada fil-"+dayStr(e)+".");return;}
+  try{localStorage.setItem("hzTest",c);}catch(x){}
+  setEnt(storeEnt);updatePaywall();msg("Kodiċi aċċettat: għandek Pro sal-"+dayStr(e)+".");
+});
 $("hzRestore").addEventListener("click",async()=>{
   if(!ready){msg("Ix-xiri jaħdem biss fl-app minn Google Play.");return;}
   msg("Qed infittex ix-xiri tiegħek…");
@@ -191,6 +206,8 @@ function initStore(){
   store.initialize([Platform.GOOGLE_PLAY]).then(()=>{ready=true;setEnt(compute());updatePaywall();});
 }
 applyTier();
+window.addEventListener("load",()=>setEnt(storeEnt));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)setEnt(storeEnt);});
 document.addEventListener("deviceready",initStore,false);
 })();
 // open outside links (WhatsApp, email) in the phone's own apps
