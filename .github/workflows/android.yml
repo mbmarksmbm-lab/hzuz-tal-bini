@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       HAS_KEY: ${{ secrets.KEYSTORE_BASE64 != '' }}
+      HAS_PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -69,3 +70,14 @@ jobs:
           files: |
             android/app/build/outputs/apk/release/*.apk
             android/app/build/outputs/bundle/release/*.aab
+
+      - name: Upload to Google Play (closed testing, as a draft)
+        if: env.HAS_KEY == 'true' && env.HAS_PLAY == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: mt.hzuztalbini.app
+          releaseFiles: android/app/build/outputs/bundle/release/*.aab
+          track: ${{ vars.PLAY_TRACK || 'alpha' }}
+          status: draft
+          releaseName: 1.0.${{ github.run_number }}
