@@ -1423,6 +1423,13 @@ $("projFile").addEventListener("change",async()=>{
     p.name=name;a.unshift(p);projPut(a);projRender();applyProj(p);pmsg("Fetaħ u salva \""+name+"\".");}
   catch(x){pmsg("Dan il-fajl mhux proġett tal-Ħżuż tal-Bini.");}
 });
+window.HZ_OPEN_PROJECT=txt=>{
+  try{const p=typeof txt==="string"?JSON.parse(txt):txt;if(!p||p.app!=="hzuz-tal-bini")throw 0;
+    const a=projAll();let name=p.name||"Proġett";
+    if(a.some(q=>q.name===name))name+=" ("+new Date().toLocaleDateString("en-GB")+")";
+    p.name=name;a.unshift(p);projPut(a);projRender();applyProj(p);$("projPanel").open=true;pmsg("Fetaħ u salva \""+name+"\".");}
+  catch(x){$("projPanel").open=true;pmsg("Dan il-fajl mhux proġett tal-Ħżuż tal-Bini.");}
+};
 projRender();
 window.HZ_REFRESH=()=>{render();if(MODE==="stairs")sRender();};
 </script>
