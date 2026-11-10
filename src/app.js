@@ -37,13 +37,37 @@ const PL=()=>(window.Capacitor&&window.Capacitor.Plugins)||{};
 const isNative=()=>!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
 const $=id=>document.getElementById(id);
 
-// ---- save PDF/DXF on the phone: write to cache, then open the share sheet (Drive, WhatsApp, print, email…)
+// ---- save PDF/DXF on the phone: ask "save" or "share"
+function askSaveOrShare(filename){
+  return new Promise(res=>{
+    const d=document.createElement("div");d.id="hzSave";
+    d.innerHTML=`<div class="hzbox" role="dialog" aria-modal="true" aria-labelledby="hzSaveT" style="gap:10px">
+      <h2 id="hzSaveT" style="font-size:1.15rem">${filename}</h2>
+      <button type="button" data-a="save">Salva fil-mowbajl (Documents › Hzuz tal-Bini)</button>
+      <button type="button" class="hzalt" data-a="share">Ibgħat / Aqsam (WhatsApp, email, Drive…)</button>
+      <button type="button" class="hzalt" data-a="">Ikkanċella</button></div>`;
+    d.style.cssText="position:fixed;inset:0;z-index:31;background:rgba(10,16,18,.55);display:flex;align-items:flex-end;justify-content:center";
+    d.addEventListener("click",e=>{const b=e.target.closest("button");if(b||e.target===d){d.remove();res(b?b.dataset.a:"");}});
+    document.body.appendChild(d);
+  });
+}
 window.HZ_SAVE={save:async({filename,data})=>{
   const {Filesystem,Share}=PL();
   if(!Filesystem||!Share)throw new Error("Ma setax jissejvja l-fajl.");
+  const how=await askSaveOrShare(filename);
+  if(!how){const e=new Error("");e.code="declined";throw e;}
   const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(data);});
-  const w=await Filesystem.writeFile({path:filename,data:b64,directory:"CACHE"});
-  await Share.share({title:filename,files:[w.uri],dialogTitle:"Salva jew ibgħat "+filename});
+  if(how==="share"){
+    const w=await Filesystem.writeFile({path:filename,data:b64,directory:"CACHE"});
+    await Share.share({title:filename,files:[w.uri],dialogTitle:"Ibgħat "+filename});
+    return {status:"saved"};
+  }
+  try{const st=await Filesystem.checkPermissions();if(st.publicStorage!=="granted")await Filesystem.requestPermissions();}catch(e){}
+  let name=filename;
+  try{const ls=await Filesystem.readdir({path:"Hzuz tal-Bini",directory:"DOCUMENTS"});const have=new Set(ls.files.map(f=>f.name||f));
+    if(have.has(name)){const dot=name.lastIndexOf(".");let k=2;while(have.has(name.slice(0,dot)+" ("+k+")"+name.slice(dot)))k++;name=name.slice(0,dot)+" ("+k+")"+name.slice(dot);}}catch(e){}
+  await Filesystem.writeFile({path:"Hzuz tal-Bini/"+name,data:b64,directory:"DOCUMENTS",recursive:true});
+  window.HZ_LAST_SAVED="Salvat f'Documents › Hzuz tal-Bini › "+name;
   return {status:"saved"};
 }};
 

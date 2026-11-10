@@ -735,7 +735,7 @@ async function makeDxfZip(){
       msg.textContent="";
       const L=window.LAST;
       await dl.save({filename:L.type+"_"+L.n+"_samrotti.pdf",data:blob});
-      msg.textContent="Il-PDF tniżżel.";
+      msg.textContent=window.HZ_LAST_SAVED||"Il-PDF tniżżel.";window.HZ_LAST_SAVED="";
     }catch(e){
       const c=e&&e.code;
       msg.textContent=c==="declined"?"":c==="rate_limited"?"Stenna ftit u erġa' pprova.":"Il-PDF ma niżilx. "+(e&&e.message||"");
@@ -750,7 +750,7 @@ async function makeDxfZip(){
       msg.textContent="";
       const L=window.LAST;
       await dl.save({filename:L.type+"_"+L.n+"_samrotti_dxf.zip",data:blob});
-      msg.textContent="Id-DXF tniżżel.";
+      msg.textContent=window.HZ_LAST_SAVED||"Id-DXF tniżżel.";window.HZ_LAST_SAVED="";
     }catch(e){
       const c=e&&e.code;
       msg.textContent=c==="declined"?"":c==="rate_limited"?"Stenna ftit u erġa' pprova.":"Id-DXF ma niżilx. "+(e&&e.message||"");
@@ -762,7 +762,7 @@ async function makeDxfZip(){
     const msg=$("sPdfMsg"),btn=$(id);
     btn.disabled=true;msg.textContent="Qed jinbena "+what+"…";
     try{const blob=await make();msg.textContent="";const L=window.SLAST;
-      await dl.save({filename:L.type+"_"+L.n+"_skaluni"+name,data:blob});msg.textContent=what.replace(/^(il-|id-)/,m=>m[0].toUpperCase()+m.slice(1))+" tniżżel.";}
+      await dl.save({filename:L.type+"_"+L.n+"_skaluni"+name,data:blob});msg.textContent=window.HZ_LAST_SAVED?window.HZ_LAST_SAVED:what.replace(/^(il-|id-)/,m=>m[0].toUpperCase()+m.slice(1))+" tniżżel.";window.HZ_LAST_SAVED="";}
     catch(e){const c=e&&e.code;msg.textContent=c==="declined"?"":c==="rate_limited"?"Stenna ftit u erġa' pprova.":"Ma niżilx. "+(e&&e.message||"");}
     finally{btn.disabled=!window.SLAST;}
   });
