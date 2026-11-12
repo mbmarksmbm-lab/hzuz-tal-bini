@@ -8,15 +8,13 @@ const ADS_TEST=true;                                          // false when the 
 const AD_BANNER_ID="ca-app-pub-3940256099942544/6300978111";  // Google's test banner – replace with your AdMob banner ID
 // Product IDs – create these with the same IDs in Play Console → Monetise
 const PRODUCTS={
-  full_lifetime:"Full – darba waħda (€100)",
-  pro_lifetime:"Pro – darba waħda (€150)",
-  pro_upgrade_lifetime:"Pro – upgrade minn Full (€50)",
-  full_entry:"Full – dħul għall-abbonament (€5)",
-  pro_entry:"Pro – dħul għall-abbonament (€20)",
-  pro_entry_upgrade:"Pro – upgrade tad-dħul (€15)"
+  full_lifetime:"Full – darba waħda (€200)",
+  pro_lifetime:"Pro – darba waħda (€300)",
+  pro_upgrade_lifetime:"Pro – upgrade minn Full (€100)"
 };
-const SUB_ID="monthly";                                       // subscription, €1 per month
-const DEFAULT_PRICE={full_lifetime:"€100",pro_lifetime:"€150",pro_upgrade_lifetime:"€50",full_entry:"€5",pro_entry:"€20",pro_entry_upgrade:"€15",monthly:"€1"};
+// subscriptions, each with one base plan billed every 4 months
+const SUBS={sub_full:"Full – kull 4 xhur (€25)",sub_pro:"Pro – kull 4 xhur (€35)"};
+const DEFAULT_PRICE={full_lifetime:"€200",pro_lifetime:"€300",pro_upgrade_lifetime:"€100",sub_full:"€25",sub_pro:"€35"};
 // =============================================
 
 const FREE_ARCH=["arkipjan","kumpass"];
@@ -99,16 +97,16 @@ box.innerHTML=`<div class="hzbox" role="dialog" aria-modal="true" aria-labelledb
   <div class="hzcards">
     <section class="hzcard" id="hzCardFull"><h3>Full</h3>
       <ul><li>Il-ħnejjiet kollha (11-il tip)</li><li>Mollijiet PDF 1:1</li><li>Bla reklami</li></ul>
-      <button type="button" class="hzbuy" data-buy="full_once"><span>Darba waħda</span><b data-p="full_once">€100</b></button>
-      <button type="button" class="hzbuy hzalt" data-buy="full_month"><span>Fix-xahar</span><b data-p="full_month">€5 + €1/xahar</b></button>
+      <button type="button" class="hzbuy hzalt" data-buy="full_month"><span>Kull 4 xhur</span><b data-p="full_month">€25</b></button>
+      <button type="button" class="hzbuy" data-buy="full_once"><span>Darba waħda</span><b data-p="full_once">€200</b></button>
     </section>
     <section class="hzcard" id="hzCardPro"><h3>Pro</h3>
       <ul><li>Kollox li hemm f'Full</li><li>It-turġien kollha (5 tipi)</li><li>Fajls DXF għall-CAD u s-CNC</li></ul>
-      <button type="button" class="hzbuy" data-buy="pro_once"><span>Darba waħda</span><b data-p="pro_once">€150</b></button>
-      <button type="button" class="hzbuy hzalt" data-buy="pro_month"><span>Fix-xahar</span><b data-p="pro_month">€20 + €1/xahar</b></button>
+      <button type="button" class="hzbuy hzalt" data-buy="pro_month"><span>Kull 4 xhur</span><b data-p="pro_month">€35</b></button>
+      <button type="button" class="hzbuy" data-buy="pro_once"><span>Darba waħda</span><b data-p="pro_once">€300</b></button>
     </section>
   </div>
-  <p class="note" style="margin:0">"Fix-xahar": tħallas id-dħul darba, imbagħad €1 fix-xahar. Tista' tieqaf meta trid minn Google Play → Abbonamenti; jekk terġa' tibda, tħallas biss l-€1. Min diġà xtara Full iħallas biss id-differenza għal Pro.</p>
+  <p class="note" style="margin:0">"Kull 4 xhur": abbonament li jiġġedded waħdu kull 4 xhur. Tista' twaqqfu meta trid minn Google Play → Abbonamenti, u l-app terġa' ssir b'xejn. Min għandu Full u jgħaddi għal Pro iħallas biss id-differenza.</p>
   <div class="hzrow" style="justify-content:flex-start"><label for="hzCode" style="flex:1;min-width:150px">Kodiċi tat-test<input id="hzCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX"></label><button type="button" class="hzalt" id="hzCodeBtn" style="align-self:flex-end">Daħħal</button></div>
   <p class="note" id="hzMsg" style="margin:0;font-weight:600"></p>
   <div class="hzrow"><button type="button" class="hzalt" id="hzRestore">Irrestawra x-xiri</button><button type="button" id="hzClose">Agħlaq</button></div>
@@ -158,30 +156,28 @@ function setEnt(e){
 }
 
 // ---- Google Play billing (cordova-plugin-purchase)
-let store=null,ready=false,pendingSub=false;
+let store=null,ready=false;
 const own=id=>{if(!store)return false;const p=store.get(id,CdvPurchase.Platform.GOOGLE_PLAY);return !!(p&&p.owned);};
 function compute(){
-  const sub=own(SUB_ID);
-  const pro=own("pro_lifetime")||(own("full_lifetime")&&own("pro_upgrade_lifetime"))||(sub&&(own("pro_entry")||(own("full_entry")&&own("pro_entry_upgrade"))));
-  const full=pro||own("full_lifetime")||(sub&&own("full_entry"));
+  const pro=own("pro_lifetime")||(own("full_lifetime")&&own("pro_upgrade_lifetime"))||own("sub_pro");
+  const full=pro||own("full_lifetime")||own("sub_full");
   return pro?"pro":full?"full":"free";
 }
 const price=id=>{try{const p=store&&store.get(id,CdvPurchase.Platform.GOOGLE_PLAY),o=p&&p.getOffer(),ph=o&&o.pricingPhases&&o.pricingPhases[0];return (ph&&ph.price)||DEFAULT_PRICE[id];}catch(e){return DEFAULT_PRICE[id];}};
 function updatePaywall(){
-  const fullL=own("full_lifetime"),fullE=own("full_entry");
+  const fullL=own("full_lifetime"),subF=own("sub_full");
   $("hzCardFull").classList.toggle("on",ent==="full");$("hzCardPro").classList.toggle("on",ent==="pro");
   const set=(k,t,dis)=>{const b=document.querySelector(`[data-buy="${k}"]`);b.querySelector("b").textContent=t;b.disabled=!!dis;};
   const have=RANK[ent];
   set("full_once",have>=1?"Għandek":price("full_lifetime"),have>=1);
-  set("full_month",have>=1?"Għandek":(fullE?"":price("full_entry")+" + ")+price(SUB_ID)+"/xahar",have>=1);
+  set("full_month",have>=1?"Għandek":price("sub_full"),have>=1);
   set("pro_once",have>=2?"Għandek":fullL?price("pro_upgrade_lifetime")+" (upgrade)":price("pro_lifetime"),have>=2);
-  const proE=own("pro_entry")||(fullE&&own("pro_entry_upgrade"));
-  set("pro_month",have>=2?"Għandek":(proE?"":(fullE?price("pro_entry_upgrade")+" (upgrade) + ":price("pro_entry")+" + "))+price(SUB_ID)+"/xahar",have>=2);
+  set("pro_month",have>=2?"Għandek":price("sub_pro")+(subF?" (upgrade)":""),have>=2||(fullL&&!subF));
 }
-async function order(id){
+async function order(id,extra){
   const p=store&&store.get(id,CdvPurchase.Platform.GOOGLE_PLAY),o=p&&p.getOffer();
   if(!o){msg("Il-prodott mhux disponibbli bħalissa. Iċċekkja l-internet u erġa' pprova.");return;}
-  const err=await o.order();
+  const err=await o.order(extra);
   if(err&&err.code!==CdvPurchase.ErrorCode.PAYMENT_CANCELLED)msg("Ix-xiri ma sarx: "+(err.message||err.code));
 }
 document.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",async()=>{
@@ -189,10 +185,13 @@ document.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",as
   msg("");const k=b.dataset.buy;
   if(k==="full_once")return order("full_lifetime");
   if(k==="pro_once")return order(own("full_lifetime")?"pro_upgrade_lifetime":"pro_lifetime");
-  if(k==="full_month"){if(own("full_entry"))return order(SUB_ID);pendingSub=true;return order("full_entry");}
+  if(k==="full_month")return order("sub_full");
   if(k==="pro_month"){
-    if(own("pro_entry")||(own("full_entry")&&own("pro_entry_upgrade")))return order(SUB_ID);
-    pendingSub=true;return order(own("full_entry")?"pro_entry_upgrade":"pro_entry");}
+    // Full subscriber moving to Pro: Google swaps the plan and charges only the difference
+    let extra;try{const tok=store.findInLocalReceipts&&store.findInLocalReceipts(store.get("sub_full",CdvPurchase.Platform.GOOGLE_PLAY));
+      const t=tok&&tok.transaction&&tok.transaction.purchaseToken;
+      if(own("sub_full")&&t)extra={googlePlay:{oldPurchaseToken:t,prorationMode:CdvPurchase.GooglePlay.ProrationMode.IMMEDIATE_AND_CHARGE_PRORATED_PRICE}};}catch(e){}
+    return order("sub_pro",extra);}
 }));
 $("hzCodeBtn").addEventListener("click",()=>{
   const c=$("hzCode").value.trim();
@@ -216,14 +215,12 @@ function initStore(){
   store=CdvPurchase.store;
   store.verbosity=CdvPurchase.LogLevel.WARNING;
   store.register(Object.keys(PRODUCTS).map(id=>({id,type:ProductType.NON_CONSUMABLE,platform:Platform.GOOGLE_PLAY}))
-    .concat([{id:SUB_ID,type:ProductType.PAID_SUBSCRIPTION,platform:Platform.GOOGLE_PLAY}]));
+    .concat(Object.keys(SUBS).map(id=>({id,type:ProductType.PAID_SUBSCRIPTION,platform:Platform.GOOGLE_PLAY}))));
   store.when()
     .approved(t=>t.finish())
     .finished(t=>{
       setEnt(compute());updatePaywall();
-      const ids=(t.products||[]).map(p=>p.id);
-      if(pendingSub&&ids.some(id=>/_entry/.test(id))){pendingSub=false;msg("Issa kkonferma l-abbonament ta' "+price(SUB_ID)+" fix-xahar.");order(SUB_ID);}
-      else if(ent!=="free")msg("Grazzi! Issa għandek "+(ent==="pro"?"Pro":"Full")+".");
+      if(ent!=="free")msg("Grazzi! Issa għandek "+(ent==="pro"?"Pro":"Full")+".");
     })
     .productUpdated(()=>{if(ready){updatePaywall();}})
     .receiptUpdated(()=>{if(ready)setEnt(compute());});
