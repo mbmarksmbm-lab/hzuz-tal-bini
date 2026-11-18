@@ -69,6 +69,22 @@ window.HZ_SAVE={save:async({filename,data})=>{
   return {status:"saved"};
 }};
 
+// ---- mould orders: open the email app with the order filled in and the project attached
+window.HZ_ORDER_SEND=async o=>{
+  const {EmailComposer,Filesystem,Share}=PL();
+  const b64=btoa(unescape(encodeURIComponent(o.json)));
+  if(EmailComposer){
+    await EmailComposer.open({to:[o.to],subject:o.subject,body:o.body,attachments:[{type:"base64",path:b64,name:o.filename}]});
+    return;
+  }
+  if(Filesystem&&Share){
+    const w=await Filesystem.writeFile({path:o.filename,data:b64,directory:"CACHE"});
+    await Share.share({title:o.subject,text:"Ibgħat lil: "+o.to+"\n\n"+o.body,files:[w.uri],dialogTitle:"Ibgħat l-ordni lil "+o.to});
+    return;
+  }
+  throw new Error("no mail");
+};
+
 // ---- paywall UI
 const css=document.createElement("style");
 css.textContent=`

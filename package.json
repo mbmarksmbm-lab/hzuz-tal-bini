@@ -14,6 +14,7 @@
     "@capacitor/core": "^8.5.3",
     "@capacitor/filesystem": "^8.1.5",
     "@capacitor/share": "^8.0.3",
+    "capacitor-email-composer": "^8.0.0",
     "cordova-plugin-purchase": "^13.19.1",
     "jspdf": "^2.5.1",
     "jszip": "^3.10.1",

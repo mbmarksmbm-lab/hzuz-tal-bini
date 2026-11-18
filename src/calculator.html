@@ -81,6 +81,17 @@ textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .projRow button{padding:7px 12px;font-size:.92rem}
 .projRow .alt{background:transparent;color:var(--accent);border:1px solid var(--accent)}
 h2{font-size:1.05rem;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em}
+#ordWrap{position:fixed;inset:0;z-index:40;background:rgba(10,16,18,.55);display:flex;align-items:flex-end;justify-content:center}
+#ordWrap .box{background:var(--panel);color:var(--ink);width:100%;max-width:640px;max-height:94vh;overflow:auto;border-radius:12px 12px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+#ordWrap h2{margin:0;font-size:1.25rem;text-transform:none;letter-spacing:0}
+#ordWrap .sum{border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:.95rem}
+#ordWrap .sum div{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+#ordWrap .sum .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:6px;font-weight:700;font-size:1.1rem}
+#ordWrap .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){#ordWrap .row2{grid-template-columns:1fr}}
+#ordWrap .alt{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+#ordWrap .err{color:#b3261e;font-size:.9rem;margin:0}
+.projRow .ord{background:var(--accent)}
 </style>
 
 <div id="gate" hidden>
@@ -1412,7 +1423,7 @@ const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",
 function projRender(){
   const a=projAll();$("projCount").textContent=a.length?"("+a.length+")":"";
   $("projList").innerHTML=a.length?a.map((p,i)=>`<div class="projRow"><b>${esc(p.name)}<small>${esc(describe(p))} · ${new Date(p.saved).toLocaleDateString("en-GB")}</small></b>
-    <button type="button" data-o="${i}">Iftaħ</button><button type="button" class="alt" data-s="${i}">Ibgħat / Salva</button><button type="button" class="alt" data-d="${i}">Ħassar</button></div>`).join(""):'<p class="note" style="margin:0">L-ebda proġett salvat s\'issa.</p>';
+    <button type="button" data-o="${i}">Iftaħ</button><button type="button" class="ord" data-m="${i}">Ordna l-mollijiet</button><button type="button" class="alt" data-s="${i}">Ibgħat / Salva</button><button type="button" class="alt" data-d="${i}">Ħassar</button></div>`).join(""):'<p class="note" style="margin:0">L-ebda proġett salvat s\'issa.</p>';
 }
 const pmsg=t=>{$("projMsg").textContent=t||"";};
 $("projSave").addEventListener("click",()=>{
@@ -1425,6 +1436,7 @@ $("projSave").addEventListener("click",()=>{
 let delArm=-1;
 $("projList").addEventListener("click",async e=>{
   const b=e.target.closest("button");if(!b)return;const a=projAll();
+  if(b.dataset.m!==undefined){orderOpen(a[+b.dataset.m]);return;}
   if(b.dataset.o!==undefined){try{applyProj(a[+b.dataset.o]);pmsg("Fetaħ \""+a[+b.dataset.o].name+"\".");}catch(x){pmsg("Dan il-proġett ma jinfetaħx.");}}
   else if(b.dataset.d!==undefined){const i=+b.dataset.d;
     if(delArm!==i){delArm=i;b.textContent="Żgur? Agħfas għal darb'oħra";setTimeout(()=>{if(delArm===i){delArm=-1;projRender();}},4000);return;}
@@ -1445,6 +1457,92 @@ $("projFile").addEventListener("change",async()=>{
     p.name=name;a.unshift(p);projPut(a);projRender();applyProj(p);pmsg("Fetaħ u salva \""+name+"\".");}
   catch(x){pmsg("Dan il-fajl mhux proġett tal-Ħżuż tal-Bini.");}
 });
+
+// ---------- mould cutting order ----------
+const ORDER_TO="mbmarks.mbm@gmail.com";
+const ORD={base:20,perCm:0.03,deliv:{gbir:["Niġbruhom jien (Xagħra, Għawdex)",0],ghawdex:["Konsenja f'Għawdex",5],malta:["Konsenja f'Malta",12]}};
+const eur=v=>"€"+(Math.round(v*100)/100).toFixed(2);
+function mouldStats(mode){
+  const per=P=>P.reduce((t,q,i)=>{const r=P[(i+1)%P.length];return t+Math.hypot(q[0]-r[0],q[1]-r[1]);},0);
+  let L,polys;
+  if(mode==="stairs"){L=window.SLAST;if(!L||!L.pieces)return null;polys=L.pieces.map(pc=>{const f=pieceTf(pc,1);return pc.poly.map(f);});}
+  else{L=window.LAST;if(!L)return null;polys=groupStones(L).map(g=>orient(g.s,1).P);}
+  if(!polys.length)return null;
+  const k=L.unit==="in"?2.54:0.1;let cm=0,big=0;
+  polys.forEach(P=>{cm+=per(P)*k;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;P.forEach(([x,y])=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y)});big=Math.max(big,(x1-x0)*k,(y1-y0)*k);});
+  return {n:polys.length,cm:Math.ceil(cm),big:Math.ceil(big)};
+}
+function orderPrice(st,sets,dv){const cut=ORD.perCm*st.cm*sets,del=ORD.deliv[dv][1];
+  return {cut,del,tot:Math.ceil((ORD.base+cut+del)*2)/2};}
+function orderOpen(p){
+  try{applyProj(p);}catch(x){pmsg("Dan il-proġett ma jinfetaħx.");return;}
+  const mode=p.mode==="stairs"?"stairs":"arch",st=mouldStats(mode);
+  if(!st){pmsg("Dan il-proġett għad m'għandux kalkolu tajjeb. Iftħu, irranġa l-qisien u salvah mill-ġdid.");return;}
+  let c={};try{c=JSON.parse(localStorage.getItem("hzCust")||"{}");}catch(x){}
+  const w=document.createElement("div");w.id="ordWrap";
+  w.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-labelledby="ordT">
+    <h2 id="ordT">Ordna l-mollijiet – ${esc(p.name)}</h2>
+    <p class="note" style="margin:0">Naqtgħu l-mollijiet 1:1 fuq kartun iebes ta' 1 mm bil-laser, eżatt kif ħarġu fil-kalkolu.</p>
+    <div class="sum">
+      <div><span>Mollijiet</span><b>${st.n}</b></div>
+      <div><span>Tul tal-qatgħa</span><b>${st.cm} cm</b></div>
+      <div><span>L-akbar moll</span><b>${st.big} cm</b></div>
+    </div>
+    <div class="row2">
+      <label for="oSets">Kemm-il sett<select id="oSets"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+      <label for="oDel">Ġbir jew konsenja<select id="oDel">${Object.entries(ORD.deliv).map(([k,v])=>`<option value="${k}">${v[0]}${v[1]?" (+€"+v[1]+")":""}</option>`).join("")}</select></label>
+    </div>
+    <div class="sum" id="oSum"></div>
+    <label for="oName">Isem u kunjom<input id="oName" type="text" autocomplete="name" value="${esc(c.name||"")}"></label>
+    <div class="row2">
+      <label for="oTel">Numru tat-telefon<input id="oTel" type="tel" autocomplete="tel" value="${esc(c.tel||"")}"></label>
+      <label for="oMail">Email (għall-irċevuta)<input id="oMail" type="email" autocomplete="email" value="${esc(c.mail||"")}"></label>
+    </div>
+    <label for="oAddr" id="oAddrW">Indirizz tal-konsenja<input id="oAddr" type="text" autocomplete="street-address" value="${esc(c.addr||"")}"></label>
+    <label for="oNote">Noti (mhux bilfors)<textarea id="oNote" rows="2"></textarea></label>
+    <label style="flex-direction:row;align-items:flex-start;gap:8px;text-transform:none;letter-spacing:0;font-size:.9rem;font-weight:400;color:var(--ink)"><input id="oOk" type="checkbox" style="width:auto;margin-top:3px">Iċċekkjajt il-qisien. Il-mollijiet jinqatgħu eżatt kif inhuma fil-proġett, u jien responsabbli li l-qisien huma tajbin qabel inaqta' l-ġebla.</label>
+    <p class="note" style="margin:0">Ladarba tibgħat l-ordni, nikkonfermawha u nibagħtulek link biex tħallas. Naqtgħu wara l-ħlas, normalment fi ftit jiem.</p>
+    <p class="err" id="oErr"></p>
+    <button type="button" id="oSend">Ibgħat l-ordni</button>
+    <button type="button" class="alt" id="oCancel">Ikkanċella</button></div>`;
+  document.body.appendChild(w);
+  const g=id=>w.querySelector("#"+id);
+  const upd=()=>{const sets=+g("oSets").value,dv=g("oDel").value,pr=orderPrice(st,sets,dv);
+    g("oAddrW").style.display=dv==="gbir"?"none":"";
+    g("oSum").innerHTML=`<div><span>Ħlas fiss tax-xogħol</span><span>${eur(ORD.base)}</span></div>
+      <div><span>Qatgħa: ${st.cm} cm × ${eur(ORD.perCm)}${sets>1?" × "+sets+" settijiet":""}</span><span>${eur(pr.cut)}</span></div>
+      <div><span>${ORD.deliv[dv][0]}</span><span>${pr.del?eur(pr.del):"b'xejn"}</span></div>
+      <div class="tot"><span>Total</span><span>${eur(pr.tot)}</span></div>`;};
+  g("oSets").addEventListener("change",upd);g("oDel").addEventListener("change",upd);upd();
+  const close=()=>w.remove();
+  g("oCancel").addEventListener("click",close);w.addEventListener("click",e=>{if(e.target===w)close();});
+  g("oSend").addEventListener("click",async()=>{
+    const v={name:g("oName").value.trim(),tel:g("oTel").value.trim(),mail:g("oMail").value.trim(),addr:g("oAddr").value.trim()},dv=g("oDel").value,sets=+g("oSets").value;
+    const err=t=>{g("oErr").textContent=t;};
+    if(!v.name)return err("Ikteb ismek.");
+    if(!/\d{8}/.test(v.tel.replace(/\D/g,"")))return err("Ikteb numru tat-telefon validu.");
+    if(dv!=="gbir"&&!v.addr)return err("Ikteb l-indirizz tal-konsenja.");
+    if(!g("oOk").checked)return err("Immarka li ċċekkjajt il-qisien.");
+    err("");try{localStorage.setItem("hzCust",JSON.stringify(v));}catch(x){}
+    const pr=orderPrice(st,sets,dv),ref="H"+Date.now().toString(36).toUpperCase().slice(-6);
+    const fn=(p.name.replace(/[^\wĀ-ɏ -]+/g,"").trim().replace(/\s+/g,"_")||"progett")+".hzuz";
+    const body=["ORDNI TAL-MOLLIJIET – "+ref,"",
+      "Klijent: "+v.name,"Telefon: "+v.tel,v.mail?"Email: "+v.mail:null,
+      ORD.deliv[dv][0]+(dv!=="gbir"?": "+v.addr:""),"",
+      "Proġett: "+p.name+" ("+describe(p)+")","Unità: "+p.unit,
+      "Mollijiet: "+st.n+" · tul tal-qatgħa "+st.cm+" cm · l-akbar moll "+st.big+" cm","Settijiet: "+sets,"",
+      "Ħlas fiss: "+eur(ORD.base),"Qatgħa: "+eur(pr.cut),"Konsenja: "+eur(pr.del),"TOTAL: "+eur(pr.tot),"",
+      g("oNote").value.trim()?"Noti: "+g("oNote").value.trim():null,
+      "Il-klijent ikkonferma li ċċekkja l-qisien.","","Il-fajl tal-proġett ("+fn+") hu mehmuż. Iftħu fil-Ħżuż tal-Bini › Proġetti › Iftaħ proġett minn fajl."].filter(x=>x!==null).join("\n");
+    const o={to:ORDER_TO,subject:"Ordni mollijiet "+ref+" – "+v.name+" – "+eur(pr.tot),body,filename:fn,json:JSON.stringify(p,null,1)};
+    g("oSend").disabled=true;
+    try{
+      if(window.HZ_ORDER_SEND)await window.HZ_ORDER_SEND(o);
+      else{const a=document.createElement("a");a.href="mailto:"+ORDER_TO+"?subject="+encodeURIComponent(o.subject)+"&body="+encodeURIComponent(body+"\n\n--- PROĠETT ---\n"+o.json);a.target="_blank";document.body.appendChild(a);a.click();a.remove();}
+      close();pmsg("L-email tal-ordni "+ref+" tħejjiet. Agħfas Send fl-email. Nikkonfermawha u nibagħtulek link biex tħallas "+eur(pr.tot)+".");
+    }catch(x){g("oSend").disabled=false;err("L-email ma nfetħitx. Ibgħat il-proġett lil "+ORDER_TO+" minn \"Ibgħat / Salva\".");}
+  });
+}
 window.HZ_OPEN_PROJECT=txt=>{
   try{const p=typeof txt==="string"?JSON.parse(txt):txt;if(!p||p.app!=="hzuz-tal-bini")throw 0;
     const a=projAll();let name=p.name||"Proġett";
