@@ -353,18 +353,20 @@ function geom(type,P){
     return g;
   }
   if(type==="elissi"){
-    const h=P.rise; if(!(h>0&&h<a)) return {err:"L-għoli tal-elissi jrid ikun inqas min-nofs id-dawl ("+fmt(a)+")."};
+    const h=P.rise; if(!(h>0)) return {err:"Daħħal l-għoli tal-elissi."};
+    if(h>3*a) return {err:"L-għoli tal-elissi kbir wisq (mhux aktar minn 3 darbiet nofs id-dawl)."};
     const N=900,inner=[],outer=[];
     const A2=a+t,B2=h+t;
     for(let j=0;j<=N;j++){const ph=PI-PI/2*j/N;const x=a*Math.cos(ph),y=h*Math.sin(ph);let ux=x/(a*a),uy=y/(h*h);const L=Math.hypot(ux,uy);inner.push({x,y,ux:ux/L,uy:uy/L,c:"—",cr:"—"});
       outer.push({x:A2*Math.cos(ph),y:B2*Math.sin(ph)});}
     g.inner=mirror(inner);g.outer=mirror(outer.map(p=>({...p,ux:0,uy:1,c:"",cr:""})));
-    const c=Math.sqrt(a*a-h*h),c2=Math.sqrt(Math.max(0,A2*A2-B2*B2));
-    pt("A",-a,0);pt("B",a,0);pt("C",0,0);pt("H",0,h);pt("F1",-c,0);pt("F2",c,0);
-    ln([-c,0],[0,h]);ln([c,0],[0,h]);
+    const tall=h>a,c=Math.sqrt(Math.abs(a*a-h*h)),c2=Math.sqrt(Math.abs(A2*A2-B2*B2));
+    pt("A",-a,0);pt("B",a,0);pt("C",0,0);pt("H",0,h);
+    if(!tall){pt("F1",-c,0);pt("F2",c,0);ln([-c,0],[0,h]);ln([c,0],[0,h]);hd(-c,0,0,"C–Foċi = "+fmt(c));}
+    else if(c>1e-9){pt("F1",0,c);pt("F2",0,-c);ln([-a,0],[0,c]);ln([a,0],[0,c]);ln([-a,0],[0,-c]);ln([a,0],[0,-c]);}
     vd(0,0,h,"CH = "+fmt(h));
-    hd(-c,0,0,"C–Foċi = "+fmt(c));
-    g.extra.push("Foċi tad-dwella mis-C = "+fmt(c),"Foċi tal-ingroppa (3, 4) mis-C = "+fmt(c2),"Ingroppa: "+fmt(2*A2)+" × "+fmt(B2));
+    g.extra.push((tall?"Foċi fuq l-assi vertikali (fuq u taħt is-C) = ":"Foċi tad-dwella mis-C = ")+fmt(c),"Foċi tal-ingroppa (3, 4) mis-C = "+fmt(c2),"Ingroppa: "+fmt(2*A2)+" × "+fmt(B2));
+    if(tall)g.note="L-għoli huwa akbar min-nofs id-dawl: l-elissi hija wieqfa u l-foċi jinsabu fuq l-assi vertikali. Il-fili xorta jaqsmu l-angolu bejn iż-żewġ foċi.";
     g.jambs=[[-a,0],[a,0]];
     return g;
   }
@@ -406,7 +408,21 @@ function geom(type,P){
     vd(0,0,h,"CH = "+fmt(h));vd(0,0,oy,"CO = "+fmt(-oy));
     g.extra.push("Raġġ (OA) = "+fmt(r));
   }else if(type==="tliet"){
-    const h=P.rise;if(!(h>0&&h<=a))return {err:"L-għoli jrid ikun bejn 0 u nofs id-dawl ("+fmt(a)+")."};
+    const h=P.rise;if(!(h>0))return {err:"Daħħal l-għoli."};
+    if(h>3*a)return {err:"L-għoli kbir wisq (mhux aktar minn 3 darbiet nofs id-dawl)."};
+    if(h>a+1e-9){
+      // tall: same construction with span and rise swapped – big radius at the springing, small radius at the crown
+      const c=Math.hypot(h,a),rc=c*(c-h+a)/(2*h),kk=((h-rc)**2-(a-rc)**2)/(2*(a-rc)),Rs=a+kk;
+      const D=[-a+Rs,0],O=[0,h-rc],L=Math.hypot(O[0]-D[0],O[1]-D[1]),u=[(O[0]-D[0])/L,(O[1]-D[1])/L];
+      const th=Math.atan2(u[1],u[0]),Q=[D[0]+Rs*u[0],D[1]+Rs*u[1]];
+      arcs=[{cx:D[0],cy:0,r:Rs,a0:PI,a1:th,c:"D",cr:"E"},{cx:0,cy:O[1],r:rc,a0:th,toAxis:1,c:"O"}];
+      pt("A",-a,0);pt("B",a,0);pt("S",0,0);pt("H",0,h);pt("O",0,O[1]);pt("D",D[0],0);pt("E",-D[0],0);
+      ln(D,Q);ln([-D[0],0],[-Q[0],Q[1]]);ln([-a,0],[0,h]);ln([a,0],[0,h]);
+      vd(0,0,h,"SH = "+fmt(h));vd(0,0,O[1],"SO = "+fmt(O[1]));
+      hd(-a,D[0],0,"AD = "+fmt(Rs));
+      g.extra.push("Raġġ D, E = "+fmt(Rs),"Raġġ O = "+fmt(rc));
+      g.note="L-għoli huwa akbar min-nofs id-dawl: ir-raġġ il-kbir (D, E) jibda mill-imposta u r-raġġ iż-żgħir (O) jagħlaq fil-quċċata. Iċ-ċentru D jinsab fuq in-naħa l-oħra tal-assi.";
+    }else{
     let r1,R2,k,th;
     if(Math.abs(h-a)<1e-9){r1=a;R2=a;k=0;th=PI/2;}
     else{const c=Math.hypot(a,h);r1=c*(c-a+h)/(2*a);k=((a-r1)**2-(h-r1)**2)/(2*(h-r1));R2=h+k;th=Math.atan2(k,-(a-r1));}
@@ -420,6 +436,7 @@ function geom(type,P){
     vd(0,0,h,"SH = "+fmt(h));vd(0,0,-k,"SO = "+fmt(k));
     if(Math.abs(Dx)>1e-6){hd(-a,Dx,0,"AD = "+fmt(r1));hd(Dx,0,1,"DS = "+fmt(-Dx));}
     g.extra.push("Raġġ D, E = "+fmt(r1),"Raġġ O = "+fmt(R2));
+    }
   }else if(type==="kwart"||type==="terz"){
     const d=type==="kwart"?a/2:a/3; // half distance between D and E
     const oy=-d*SQ3, rs=a-d, rt=2*d+rs;
