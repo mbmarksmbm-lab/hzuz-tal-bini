@@ -1473,7 +1473,7 @@ function mouldStats(mode){
   return {n:polys.length,cm:Math.ceil(cm),big:Math.ceil(big)};
 }
 function orderPrice(st,sets,dv){const cut=ORD.perCm*st.cm*sets,del=ORD.deliv[dv][1];
-  return {cut,del,tot:Math.ceil((ORD.base+cut+del)*2)/2};}
+  return {cut,del,tot:Math.round((ORD.base+cut+del)*100)/100};}
 function orderOpen(p){
   try{applyProj(p);}catch(x){pmsg("Dan il-proġett ma jinfetaħx.");return;}
   const mode=p.mode==="stairs"?"stairs":"arch",st=mouldStats(mode);
