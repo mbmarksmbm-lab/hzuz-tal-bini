@@ -1460,7 +1460,7 @@ $("projFile").addEventListener("change",async()=>{
 
 // ---------- mould cutting order ----------
 const ORDER_TO="mbmarks.mbm@gmail.com";
-const ORD={base:20,perCm:0.03,deliv:{gbir:["Niġbruhom jien (Xagħra, Għawdex)",0],ghawdex:["Konsenja f'Għawdex",5],malta:["Konsenja f'Malta",12]}};
+const ORD={base:20,perCm:0.03,deliv:{gbir:["Niġborhom jien (Xagħra, Għawdex)",0],ghawdex:["Konsenja f'Għawdex",5],malta:["Konsenja f'Malta",12]}};
 const eur=v=>"€"+(Math.round(v*100)/100).toFixed(2);
 function mouldStats(mode){
   const per=P=>P.reduce((t,q,i)=>{const r=P[(i+1)%P.length];return t+Math.hypot(q[0]-r[0],q[1]-r[1]);},0);
