@@ -8,12 +8,12 @@ const ADS_TEST=true;                                          // false when the 
 const AD_BANNER_ID="ca-app-pub-3940256099942544/6300978111";  // Google's test banner – replace with your AdMob banner ID
 // Product IDs – create these with the same IDs in Play Console → Monetise
 const PRODUCTS={
-  full_lifetime:"Full – darba waħda (€200)",
-  pro_lifetime:"Pro – darba waħda (€300)",
-  pro_upgrade_lifetime:"Pro – upgrade minn Full (€100)"
+  full_lifetime:"Full – ħlas ta' darba (€200)",
+  pro_lifetime:"Pro – ħlas ta' darba (€300)",
+  pro_upgrade_lifetime:"Minn Full għal Pro (€100)"
 };
 // subscriptions, each with one base plan billed every 4 months
-const SUBS={sub_full:"Full – kull 4 xhur (€25)",sub_pro:"Pro – kull 4 xhur (€35)"};
+const SUBS={sub_full:"Full – €25 kull 4 xhur",sub_pro:"Pro – €35 kull 4 xhur"};
 const DEFAULT_PRICE={full_lifetime:"€200",pro_lifetime:"€300",pro_upgrade_lifetime:"€100",sub_full:"€25",sub_pro:"€35"};
 // =============================================
 
@@ -41,7 +41,7 @@ function askSaveOrShare(filename){
     const d=document.createElement("div");d.id="hzSave";
     d.innerHTML=`<div class="hzbox" role="dialog" aria-modal="true" aria-labelledby="hzSaveT" style="gap:10px">
       <h2 id="hzSaveT" style="font-size:1.15rem">${filename}</h2>
-      <button type="button" data-a="save">Salva fil-mowbajl (Documents › Hzuz tal-Bini)</button>
+      <button type="button" data-a="save">Salva fuq il-mowbajl (Documents › Hzuz tal-Bini)</button>
       <button type="button" class="hzalt" data-a="share">Ibgħat / Aqsam (WhatsApp, email, Drive…)</button>
       <button type="button" class="hzalt" data-a="">Ikkanċella</button></div>`;
     d.style.cssText="position:fixed;inset:0;z-index:31;background:rgba(10,16,18,.55);display:flex;align-items:flex-end;justify-content:center";
@@ -51,7 +51,7 @@ function askSaveOrShare(filename){
 }
 window.HZ_SAVE={save:async({filename,data})=>{
   const {Filesystem,Share}=PL();
-  if(!Filesystem||!Share)throw new Error("Ma setax jissejvja l-fajl.");
+  if(!Filesystem||!Share)throw new Error("Il-fajl ma setax jiġi salvat.");
   const how=await askSaveOrShare(filename);
   if(!how){const e=new Error("");e.code="declined";throw e;}
   const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(data);});
@@ -65,7 +65,7 @@ window.HZ_SAVE={save:async({filename,data})=>{
   try{const ls=await Filesystem.readdir({path:"Hzuz tal-Bini",directory:"DOCUMENTS"});const have=new Set(ls.files.map(f=>f.name||f));
     if(have.has(name)){const dot=name.lastIndexOf(".");let k=2;while(have.has(name.slice(0,dot)+" ("+k+")"+name.slice(dot)))k++;name=name.slice(0,dot)+" ("+k+")"+name.slice(dot);}}catch(e){}
   await Filesystem.writeFile({path:"Hzuz tal-Bini/"+name,data:b64,directory:"DOCUMENTS",recursive:true});
-  window.HZ_LAST_SAVED="Salvat f'Documents › Hzuz tal-Bini › "+name;
+  window.HZ_LAST_SAVED="Il-fajl ġie salvat f'Documents › Hzuz tal-Bini › "+name;
   return {status:"saved"};
 }};
 
@@ -112,25 +112,25 @@ box.innerHTML=`<div class="hzbox" role="dialog" aria-modal="true" aria-labelledb
   <p class="note" id="hzWhy" style="margin:0"></p>
   <div class="hzcards">
     <section class="hzcard" id="hzCardFull"><h3>Full</h3>
-      <ul><li>Il-ħnejjiet kollha (11-il tip)</li><li>Mollijiet PDF 1:1</li><li>Bla reklami</li></ul>
+      <ul><li>Il-ħnejjiet kollha (11-il tip)</li><li>Mollijiet f'format PDF fuq skala 1:1</li><li>Bla reklami</li></ul>
       <button type="button" class="hzbuy hzalt" data-buy="full_month"><span>Kull 4 xhur</span><b data-p="full_month">€25</b></button>
-      <button type="button" class="hzbuy" data-buy="full_once"><span>Darba waħda</span><b data-p="full_once">€200</b></button>
+      <button type="button" class="hzbuy" data-buy="full_once"><span>Ħlas ta' darba</span><b data-p="full_once">€200</b></button>
     </section>
     <section class="hzcard" id="hzCardPro"><h3>Pro</h3>
-      <ul><li>Kollox li hemm f'Full</li><li>It-turġien kollha (5 tipi)</li><li>Fajls DXF għall-CAD u s-CNC</li></ul>
+      <ul><li>Kollox li hemm f'Full</li><li>It-turġien kollha (5 tipi)</li><li>Fajls DXF għall-CAD u għas-CNC</li></ul>
       <button type="button" class="hzbuy hzalt" data-buy="pro_month"><span>Kull 4 xhur</span><b data-p="pro_month">€35</b></button>
-      <button type="button" class="hzbuy" data-buy="pro_once"><span>Darba waħda</span><b data-p="pro_once">€300</b></button>
+      <button type="button" class="hzbuy" data-buy="pro_once"><span>Ħlas ta' darba</span><b data-p="pro_once">€300</b></button>
     </section>
   </div>
-  <p class="note" style="margin:0">"Kull 4 xhur": abbonament li jiġġedded waħdu kull 4 xhur. Tista' twaqqfu meta trid minn Google Play → Abbonamenti, u l-app terġa' ssir b'xejn. Min għandu Full u jgħaddi għal Pro iħallas biss id-differenza.</p>
-  <div class="hzrow" style="justify-content:flex-start"><label for="hzCode" style="flex:1;min-width:150px">Kodiċi tat-test<input id="hzCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX"></label><button type="button" class="hzalt" id="hzCodeBtn" style="align-self:flex-end">Daħħal</button></div>
+  <p class="note" style="margin:0">L-abbonament jiġġedded awtomatikament kull 4 xhur. Tista' tikkanċellah meta trid minn Google Play → Abbonamenti. Meta jintemm il-perjodu tal-abbonament, l-app terġa' lura għall-verżjoni b'xejn. Jekk għandek il-verżjoni Full u taqleb għal Pro, tħallas biss id-differenza.</p>
+  <div class="hzrow" style="justify-content:flex-start"><label for="hzCode" style="flex:1;min-width:150px">Kodiċi ta' prova<input id="hzCode" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX"></label><button type="button" class="hzalt" id="hzCodeBtn" style="align-self:flex-end">Daħħal</button></div>
   <p class="note" id="hzMsg" style="margin:0;font-weight:600"></p>
   <div class="hzrow"><button type="button" class="hzalt" id="hzRestore">Irrestawra x-xiri</button><button type="button" id="hzClose">Agħlaq</button></div>
 </div>`;
 document.body.appendChild(box);
 const msg=t=>{$("hzMsg").textContent=t||"";};
 window.HZ_PAYWALL=why=>{
-  $("hzWhy").textContent=why==="pro"?"It-turġien u l-fajls DXF huma fil-verżjoni Pro.":why==="full"?"Din il-ħaġa hija fil-verżjoni Full jew Pro. Il-verżjoni b'xejn fiha l-arkipjan u l-ħnejja kumpass.":"Agħżel verżjoni.";
+  $("hzWhy").textContent=why==="pro"?"It-turġien u l-fajls DXF huma disponibbli fil-verżjoni Pro.":why==="full"?"Din il-funzjoni hija disponibbli fil-verżjoni Full jew Pro. Il-verżjoni b'xejn tinkludi l-arkipjan u l-ħnejja kumpass.":"Agħżel verżjoni.";
   msg("");updatePaywall();box.hidden=false;
 };
 $("hzClose").addEventListener("click",()=>box.hidden=true);
@@ -192,12 +192,12 @@ function updatePaywall(){
 }
 async function order(id,extra){
   const p=store&&store.get(id,CdvPurchase.Platform.GOOGLE_PLAY),o=p&&p.getOffer();
-  if(!o){msg("Il-prodott mhux disponibbli bħalissa. Iċċekkja l-internet u erġa' pprova.");return;}
+  if(!o){msg("Il-prodott bħalissa mhux disponibbli. Iċċekkja l-konnessjoni mal-internet u erġa' pprova.");return;}
   const err=await o.order(extra);
-  if(err&&err.code!==CdvPurchase.ErrorCode.PAYMENT_CANCELLED)msg("Ix-xiri ma sarx: "+(err.message||err.code));
+  if(err&&err.code!==CdvPurchase.ErrorCode.PAYMENT_CANCELLED)msg("Ix-xiri ma setax jitlesta: "+(err.message||err.code));
 }
 document.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",async()=>{
-  if(!ready){msg(isNative()?"Il-ħanut għadu qed jitgħabba. Erġa' pprova f'mument.":"Ix-xiri jaħdem biss fl-app minn Google Play.");return;}
+  if(!ready){msg(isNative()?"Il-ħanut għadu qed jitgħabba. Erġa' pprova fi ftit ħin.":"Tista' tixtri biss mill-app imniżżla minn Google Play.");return;}
   msg("");const k=b.dataset.buy;
   if(k==="full_once")return order("full_lifetime");
   if(k==="pro_once")return order(own("full_lifetime")?"pro_upgrade_lifetime":"pro_lifetime");
@@ -211,18 +211,18 @@ document.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",as
 }));
 $("hzCodeBtn").addEventListener("click",()=>{
   const c=$("hzCode").value.trim();
-  if(typeof checkCode!=="function"){msg("Erġa' pprova f'mument.");return;}
+  if(typeof checkCode!=="function"){msg("Erġa' pprova fi ftit ħin.");return;}
   const e=checkCode(c);
-  if(e===null){msg("Dan il-kodiċi mhux validu. Iċċekkja li kitbitu sew.");return;}
+  if(e===null){msg("Dan il-kodiċi mhuwiex validu. Iċċekkja li daħħaltu sew.");return;}
   if(dayNum(Date.now())>e){msg("Dan il-kodiċi skada fil-"+dayStr(e)+".");return;}
   try{localStorage.setItem("hzTest",c);}catch(x){}
-  setEnt(storeEnt);updatePaywall();msg("Kodiċi aċċettat: għandek Pro sal-"+dayStr(e)+".");
+  setEnt(storeEnt);updatePaywall();msg("Il-kodiċi ġie aċċettat. Għandek aċċess għall-verżjoni Pro sal-"+dayStr(e)+".");
 });
 $("hzRestore").addEventListener("click",async()=>{
-  if(!ready){msg("Ix-xiri jaħdem biss fl-app minn Google Play.");return;}
-  msg("Qed infittex ix-xiri tiegħek…");
+  if(!ready){msg("Tista' tixtri biss mill-app imniżżla minn Google Play.");return;}
+  msg("Qed infittxu x-xiri tiegħek…");
   try{await store.restorePurchases();}catch(e){}
-  setEnt(compute());updatePaywall();msg(ent==="free"?"Ma nstab l-ebda xiri fuq dan il-kont ta' Google.":"Ix-xiri ġie rrestawrat: "+(ent==="pro"?"Pro":"Full")+".");
+  setEnt(compute());updatePaywall();msg(ent==="free"?"Ma nstab l-ebda xiri fuq dan il-kont ta' Google.":"Ix-xiri tiegħek ġie restawrat: "+(ent==="pro"?"Pro":"Full")+".");
 });
 
 function initStore(){
@@ -236,7 +236,7 @@ function initStore(){
     .approved(t=>t.finish())
     .finished(t=>{
       setEnt(compute());updatePaywall();
-      if(ent!=="free")msg("Grazzi! Issa għandek "+(ent==="pro"?"Pro":"Full")+".");
+      if(ent!=="free")msg("Grazzi! Issa għandek aċċess għall-verżjoni "+(ent==="pro"?"Pro":"Full")+".");
     })
     .productUpdated(()=>{if(ready){updatePaywall();}})
     .receiptUpdated(()=>{if(ready)setEnt(compute());});
